@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff" />
+    <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff">
+      <change afterPath="$PROJECT_DIR$/lib/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/FHMC.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/FidHMC.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/mcmc_log_probability.png" beforeDir="false" afterPath="$PROJECT_DIR$/plots/mcmc_log_probability.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/mcmc_samples.png" beforeDir="false" afterPath="$PROJECT_DIR$/plots/mcmc_samples.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/testing_withoutJAX/mcmc_log_probability.png" beforeDir="false" afterPath="$PROJECT_DIR$/plots/testing_withoutJAX/mcmc_log_probability.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/testing_withoutJAX/mcmc_samples.png" beforeDir="false" afterPath="$PROJECT_DIR$/plots/testing_withoutJAX/mcmc_samples.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_FHMC.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_FidHMC.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,7 +40,10 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="editing.templates" />
   </component>
   <component name="RecentsManager">
@@ -39,29 +52,6 @@
       <recent name="$PROJECT_DIR$/Tests" />
       <recent name="$PROJECT_DIR$/venv" />
     </key>
-  </component>
-  <component name="RunManager">
-    <configuration name="Differentiator_g" type="PythonConfigurationType" factoryName="Python">
-      <module name="CFHMC" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lib" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/lib/DifferentiatorG.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">

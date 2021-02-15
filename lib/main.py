@@ -9,7 +9,7 @@
 
 from fiducialFunctions import *
 import jax.numpy as np
-from FHMC import FHMC
+from FidHMC import FidHMC
 from jax import random
 import seaborn as sns
 import pandas as pd
@@ -21,7 +21,7 @@ data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray([-0.5, 3.2, 1
 theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
 
 # Create the object and perform NUTS:
-fhmc = FHMC(log_likelihood, dga_func, eval_func, 6, data_0)
+fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0)
 states, log_probs = fhmc.run_NUTS(num_iters=50, burn_in=25, initial_value=theta_0)
 
 # Graph the results

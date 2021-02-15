@@ -8,11 +8,15 @@
 from jax import random
 import jax.numpy as np
 import tensorflow_probability as tfp
-from lib.DifferentiatorDGA import DifferentiatorDGA
 tfp = tfp.substrates.jax
 
+try:
+    from DifferentiatorDGA import DifferentiatorDGA
+except:
+    from lib.DifferentiatorDGA import DifferentiatorDGA
 
-class FHMC:
+
+class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function, parameter_dimension, observed_data):
         self.ll = log_likelihood_function

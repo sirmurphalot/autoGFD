@@ -7,10 +7,14 @@
 """
 
 import unittest
+from lib import FidHMC
 import jax.numpy as np
+import tensorflow_probability as tfp
 from jax import random
 from jax.scipy import stats
-from lib.FHMC import FHMC
+from lib.FidHMC import FidHMC
+
+tfp = tfp.substrates.jax
 
 
 class TestFHMC(unittest.TestCase):
@@ -44,7 +48,7 @@ class TestFHMC(unittest.TestCase):
             ])
 
         data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray([-0.5, 3.2, 1.0]), np.identity(3), shape=[2])
-        fhmc = FHMC(log_likelihood, dga_func, eval_func, 3, data_0)
+        fhmc = FidHMC(log_likelihood, dga_func, eval_func, 3, data_0)
         theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
         fhmc_log_probability = fhmc._fll(theta_0)
 
@@ -55,6 +59,6 @@ class TestFHMC(unittest.TestCase):
         self.assertAlmostEqual(fhmc_log_probability, regular_log_probability)
 
 if __name__ == '__main__':
-    # python -m unittest tests/test_FHMC.py
+    # python -m unittest tests/test_FidHMC.py
     unittest.main()
 
