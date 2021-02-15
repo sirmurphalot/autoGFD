@@ -8,7 +8,7 @@
 from jax import random
 import jax.numpy as np
 import tensorflow_probability as tfp
-from DifferentiatorDGA import DifferentiatorDGA
+from lib.DifferentiatorDGA import DifferentiatorDGA
 tfp = tfp.substrates.jax
 
 
@@ -21,7 +21,7 @@ class FHMC:
         self.param_dim = parameter_dimension
         self.data = observed_data
 
-    def fll(self, theta):
+    def _fll(self, theta):
         """
         The fiducial log likelihood.  Takes a derivative of the DGA to develop the jacobian term.
         Args:
@@ -52,7 +52,7 @@ class FHMC:
         """
         assert num_iters > burn_in, "You are burning more samples than you are taking."
 
-        kernel = tfp.mcmc.NoUTurnSampler(self.fll, step_size=step_size)
+        kernel = tfp.mcmc.NoUTurnSampler(self._fll, step_size=step_size)
         key, sample_key = random.split(random.PRNGKey(random_key))
         return tfp.mcmc.sample_chain(num_iters,
                                      current_state=initial_value,

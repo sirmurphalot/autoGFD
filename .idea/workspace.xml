@@ -2,16 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff">
-      <change afterPath="$PROJECT_DIR$/lib/DifferentiatorDGA.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/DifferentiatorG.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/FHMC.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/fiducialFunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_DifferentiatorDGA.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_DifferentiatorG.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/_autodiff.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test__autodiff.py" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/main_withoutJAX.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_FHMC.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/FHMC.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/FHMC.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
