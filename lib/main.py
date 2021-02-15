@@ -8,17 +8,19 @@
 """
 
 from fiducialFunctions import *
+import jax.numpy as np
 from FHMC import FHMC
 from jax import random
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Establish true parameters, data, and initial theta value
 true_theta = [-0.5, 3.2, 1.0, 1., 1., 1.]
 data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray([-0.5, 3.2, 1.0]), np.identity(3), shape=[2])
 theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
 
-# Create the object:
+# Create the object and perform NUTS:
 fhmc = FHMC(log_likelihood, dga_func, eval_func, 6, data_0)
 states, log_probs = fhmc.run_NUTS(num_iters=50, burn_in=25, initial_value=theta_0)
 

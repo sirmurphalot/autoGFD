@@ -8,7 +8,6 @@
 
 import unittest
 import jax.numpy as np
-
 from lib.DifferentiatorDGA import DifferentiatorDGA
 
 
