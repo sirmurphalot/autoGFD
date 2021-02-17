@@ -21,8 +21,8 @@ class TestFHMC(unittest.TestCase):
     def test_main(self):
         true_theta = [-0.5, 3.2, 1.0, 1., 1., 1.]
         theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
-        num_iters = 50
-        burn_in = 25
+        num_iters = 15000
+        burn_in = 5000
 
 
         # Create the object:

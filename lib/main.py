@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-
 """
     Example of using the fiducial NUTS sampler.
-
+    Note --> for venv mishaps, try $hash -r
     Author: Alexander Murph
     Date: 2/14/21
 """
@@ -22,7 +20,7 @@ theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
 
 # Create the object and perform NUTS:
 fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0)
-states, log_probs = fhmc.run_NUTS(num_iters=50, burn_in=25, initial_value=theta_0)
+states, log_probs = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0)
 
 # Graph the results
 col_names = []
