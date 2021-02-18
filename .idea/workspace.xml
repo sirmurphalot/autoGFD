@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/FidHMC.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/FidHMC.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
