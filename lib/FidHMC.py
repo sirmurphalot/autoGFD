@@ -8,6 +8,7 @@
 from jax import random
 import jax.numpy as np
 import tensorflow_probability as tfp
+
 tfp = tfp.substrates.jax
 
 try:
