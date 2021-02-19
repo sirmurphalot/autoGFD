@@ -4,10 +4,10 @@
     Author: Alexander Murph
     Date: 2/14/21
 """
-
-from fiducialFunctions import *
+import os
+from examples.fiducial_functions.simple_normal_fiducial_functions import *
 import jax.numpy as np
-from FidHMC import FidHMC
+from lib.FidHMC import FidHMC
 from jax import random
 import seaborn as sns
 import pandas as pd
@@ -36,10 +36,11 @@ for ax in g.axes.flat:
     ax.axvline(true_theta[count], color="red")
     count += 1
 
-g.savefig('plots/mcmc_samples.png')
+my_path = os.path.dirname(os.path.abspath(__file__))
+g.savefig(my_path+'/plots/mcmc_samples.png')
 
 plt.figure()
 plt.plot(log_probs)
 plt.ylabel('Target Log Prob')
 plt.xlabel('Iterations of NUTS')
-plt.savefig('plots/mcmc_log_probability.png')
+plt.savefig(my_path+'/plots/mcmc_log_probability.png')

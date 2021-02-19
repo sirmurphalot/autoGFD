@@ -2,7 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff">
+      <change afterPath="$PROJECT_DIR$/examples/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/fiducial_functions/multivariate_normal_fiducial_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/gamma.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/multivariate_normal.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/fiducial_functions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testing_withoutJAX/mcmc_log_probability.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/testing_withoutJAX/mcmc_samples.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/fiducialFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/fiducial_functions/simple_normal_fiducial_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/simple_normal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/mcmc_log_probability.png" beforeDir="false" afterPath="$PROJECT_DIR$/examples/plots/mcmc_log_probability.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/mcmc_samples.png" beforeDir="false" afterPath="$PROJECT_DIR$/examples/plots/mcmc_samples.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/testing_withoutJAX/mcmc_log_probability.png" beforeDir="false" afterPath="$PROJECT_DIR$/examples/plots/simple_normal/mcmc_log_probability.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots/testing_withoutJAX/mcmc_samples.png" beforeDir="false" afterPath="$PROJECT_DIR$/examples/plots/simple_normal/mcmc_samples.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_main_withoutJAX.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_main_withoutJAX.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,8 +26,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="Python Unit Test" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -26,23 +40,31 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1oRF9Hi4DKQBJlw9ypkM6KoVAbk" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/tests" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tests" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tests" />
+      <recent name="$PROJECT_DIR$/examples/fiducial_functions" />
+      <recent name="$PROJECT_DIR$/examples/plots/simple_normal" />
+      <recent name="$PROJECT_DIR$/examples" />
       <recent name="$PROJECT_DIR$/lib" />
-      <recent name="$PROJECT_DIR$/Tests" />
-      <recent name="$PROJECT_DIR$/venv" />
     </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
@@ -58,5 +80,8 @@
       <updated>1613241343162</updated>
     </task>
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>

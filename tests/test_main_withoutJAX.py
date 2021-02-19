@@ -5,7 +5,7 @@
     Author: Alexander Murph
     Date: 2/14/21
 """
-
+import os
 import unittest
 from jax import random
 from jax.scipy import stats
@@ -67,13 +67,14 @@ class TestFHMC(unittest.TestCase):
             ax.axvline(true_theta[count], color="red")
             count += 1
 
-        g.savefig('plots/testing_withoutJAX/mcmc_samples.png')
+        my_path = os.path.dirname(os.path.abspath(__file__))
+        g.savefig(my_path+'/testing_withoutJAX/mcmc_samples.png')
 
         plt.figure()
         plt.plot(log_probs)
         plt.ylabel('Target Log Prob')
         plt.xlabel('Iterations of NUTS')
-        plt.savefig('plots/testing_withoutJAX/mcmc_log_probability.png')
+        plt.savefig(my_path+'/testing_withoutJAX/mcmc_log_probability.png')
 
         self.assertTrue(True)
 
