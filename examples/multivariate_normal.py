@@ -87,18 +87,35 @@ def run_example():
     theta_0 = np.asarray([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1., 1., 1., 1., 1., 1., 1., 1.])
     lower_bounds = [-1., -1., -1., -1., -1., -1., None, None, None, None, None, None, None, None]
     upper_bounds = [1., 1., 1., 1., 1., 1., None, None, None, None, None, None, None, None]
-    # a, l, m = uncollapse_parameters(true_theta)
-    # print("a matrix:", a)
-    # print("lambda matrix:", l)
-    # print("mu vector:", m)
+    a, l, m = uncollapse_parameters(true_theta)
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    np.save(my_path + "/data/MVN_trueA.npy", a)
+    np.save(my_path + "/data/MVN_trueLambda.npy", l)
+    np.save(my_path + "/data/MVN_trueMu.npy", m)
 
     # Create the object and perform NUTS:
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
     states, log_probs = fhmc.run_NUTS(num_iters=50, burn_in=25, initial_value=theta_0)
-    print("states:", states)
-    print("log_probs:", log_probs)
 
-# def create_plots():
+    # Save the data:
+    np.save(my_path + "/data/MVN_States.npy", states)
+    np.save(my_path + "/data/MVN_LogProbs.npy", log_probs)
+
+def create_plots():
+    # Get Parameter Names
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    true_a = np.load(my_path + "/data/MVN_trueA.npy")
+    true_lambda = np.load(my_path + "/data/MVN_trueLambda.npy")
+    true_mu = np.load(my_path + "/data/MVN_trueMu.npy")
     
+    col_names = []
+    for d in range(len(true_theta)):
+        col_names.append("theta_" + str(d))
+
+    # Load the data
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    states = np.load(my_path + "/data/SimpleNormal_States.npy")
+    log_probs = np.load(my_path + "/data/SimpleNormal_LogProbs.npy")
+
 
 run_example()

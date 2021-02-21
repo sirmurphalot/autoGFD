@@ -2,14 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff">
-      <change afterPath="$PROJECT_DIR$/lib/DGAWrapper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/EvaluationFunctionWrapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/FHMC.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/FHMC.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/data/SimpleNormal_LogProbs.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/data/SimpleNormal_States.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/plots/SimpleNormal_mcmc_log_probability.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/plots/SimpleNormal_mcmc_samples.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/murph.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/murph.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/fiducial_functions/multivariate_normal_fiducial_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/fiducial_functions/multivariate_normal_fiducial_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/multivariate_normal.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/multivariate_normal.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/FidHMC.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/FidHMC.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/LogLikelihoodWrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/LogLikelihoodWrapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/plots/mcmc_log_probability.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/plots/mcmc_samples.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/plots/simple_normal/mcmc_log_probability.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/plots/simple_normal/mcmc_samples.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/simple_normal.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/simple_normal.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
