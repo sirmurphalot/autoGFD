@@ -11,7 +11,6 @@ from jax.scipy import stats
 
 
 def dga_func(theta, rand_quantity):
-    # TODO: Check that the dimensions on the .solve are correct here.  I think they might not be.
     A_matrix_lower = np.asarray([[0., 0., 0., 0.],
                                  [theta[0], 0., 0., 0.],
                                  [theta[1], theta[2], 0., 0.],
@@ -22,7 +21,7 @@ def dga_func(theta, rand_quantity):
     dga_value = mu_vector.transpose() + np.matmul(I_plus_A_matrix.transpose(),
                                                   np.matmul(np.linalg.solve(I_plus_A_matrix,
                                                                             lambda_matrix), rand_quantity.transpose()))
-    return dga_value.astype(float)
+    return dga_value
 
 
 def eval_func(theta, data_row):
@@ -37,7 +36,6 @@ def eval_func(theta, data_row):
                                                   np.linalg.solve(I_plus_A_matrix.transpose(),
                                                                   data_row.transpose() -
                                                                   mu_vector.transpose()))).astype(float)
-
 
 def log_likelihood(theta, data):
     A_matrix_lower = np.asarray([[0., 0., 0., 0.],
