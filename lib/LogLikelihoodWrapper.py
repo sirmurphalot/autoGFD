@@ -59,6 +59,7 @@ class LogLikelihoodWrapper:
                     bijector = tfp.bijectors.SoftClip(low=self.lower_bounds[index],
                                                       high=self.upper_bounds[index], hinge_softness=5)
                     new_value = bijector.forward([parameter_vector[index]])
+<<<<<<< HEAD
                     print(new_value)
                     print(np.array(parameter_vector[index], float))
                     transform_log_jacobian += bijector.forward_log_det_jacobian(np.array(parameter_vector[index],
@@ -72,6 +73,9 @@ class LogLikelihoodWrapper:
                     #                                    np.log(1 + np.exp(-new_value)) + \
                     #                                    np.log(1. - self.inverse_logit(new_value)), float)
                     print(new_value)
+=======
+                    transform_log_jacobian += bijector.forward_log_det_jacobian([parameter_vector[index]], 1)
+>>>>>>> parent of cfce4f1 (Moving things onto Longleaf)
                     transformed_parameter_vector = ops.index_update(transformed_parameter_vector,
                                                                     ops.index[index], new_value[0])
                 else:
