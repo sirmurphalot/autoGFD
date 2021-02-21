@@ -132,21 +132,19 @@ def create_plots():
     true_a = np.load(my_path + "/data/MVN_trueA.npy")
     true_lambda = np.load(my_path + "/data/MVN_trueLambda.npy")
     true_mu = np.load(my_path + "/data/MVN_trueMu.npy")
-    
-    col_names = []
-    for d in range(len(true_theta)):
-        col_names.append("theta_" + str(d))
 
     # Load the data
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/SimpleNormal_States.npy")
     log_probs = np.load(my_path + "/data/SimpleNormal_LogProbs.npy")
 
+    # Graph the log probability
+    plt.figure()
+    plt.plot(log_probs)
+    plt.ylabel('Target Log Prob')
+    plt.xlabel('Iterations of NUTS')
+    plt.savefig(my_path+'/plots/MVN_mcmc_log_probability.png')
 
-<<<<<<< HEAD
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
 run_example(13)
 create_plots()
-=======
-run_example()
->>>>>>> parent of cfce4f1 (Moving things onto Longleaf)
