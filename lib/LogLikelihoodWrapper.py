@@ -52,6 +52,8 @@ class LogLikelihoodWrapper:
                     bijector = tfp.bijectors.SoftClip(low=self.lower_bounds[index],
                                                       high=self.upper_bounds[index], hinge_softness=5)
                     new_value = bijector.forward([parameter_vector[index]])
+                    print(new_value)
+                    print([parameter_vector[index]])
                     transform_log_jacobian += bijector.forward_log_det_jacobian([parameter_vector[index]], 1)
                     transformed_parameter_vector = ops.index_update(transformed_parameter_vector,
                                                                     ops.index[index], new_value[0])
