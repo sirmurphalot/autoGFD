@@ -71,27 +71,24 @@ class FidHMC:
                                          num_burnin_steps=burn_in,
                                          seed=key)
         elif self.lower_bounds is not None and self.upper_bounds is not None:
-            print("GOT HERE AS WELL 3")
             states, log_probs = tfp.mcmc.sample_chain(num_iters,
                                                       current_state=initial_value,
                                                       kernel=kernel,
                                                       trace_fn=lambda _, results: results.target_log_prob,
                                                       num_burnin_steps=burn_in,
                                                       seed=key)
-            print("GOT HERE AS WELL 2")
             new_states = np.zeros(states.shape[0])
             for index in range(self.param_dim):
                 if self.lower_bounds[index] is None or self.upper_bounds[index] is None:
                     new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
                                                  np.asarray([states[:, index]]).transpose()), axis=1)
                 elif type(self.lower_bounds[index]) is float and type(self.upper_bounds[index]) is float:
-                    print("GOT HERE AS WELL")
-                    logit_states = np.asarray((states[:, index] -
+                    logit_states = np.array([(states[:, index] -
                                                self.lower_bounds[index]) * ((self.upper_bounds[index] -
-                                                                             self.lower_bounds[index]) ** (-1)))
+                                                                             self.lower_bounds[index]) ** (-1))], float)
                     print(logit_states)
                     new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 logit_states), axis=1)
+                                                 logit_states.transpose()), axis=1)
                 else:
                     raise TypeError("Please make sure your parameter bounds are type float or None.")
             new_states = new_states[:, 1:]

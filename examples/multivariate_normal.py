@@ -55,7 +55,7 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 
 def run_example(seed):
     # Initial four draws from a MVN distribution:
-    n = 100
+    n = 4
     true_mu = np.asarray([1., 2., 3., 1.])
     true_Sigma = np.asarray([[4., 1., 0., 0.],
                              [1., 1., 0., 1.],

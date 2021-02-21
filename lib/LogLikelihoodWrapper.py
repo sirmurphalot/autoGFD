@@ -56,24 +56,22 @@ class LogLikelihoodWrapper:
                 if self.lower_bounds[index] is None or self.upper_bounds[index] is None:
                     continue
                 elif type(self.lower_bounds[index]) is float and type(self.lower_bounds[index]) is float:
-                    bijector = tfp.bijectors.SoftClip(low=self.lower_bounds[index],
-                                                      high=self.upper_bounds[index], hinge_softness=5)
-                    new_value = bijector.forward([parameter_vector[index]])
-                    print(new_value)
-                    print(np.array(parameter_vector[index], float))
-                    transform_log_jacobian += bijector.forward_log_det_jacobian(np.array(parameter_vector[index],
-                                                                                         float), 0)
-                    print("GOT HERE")
+                    # bijector = tfp.bijectors.SoftClip(low=self.lower_bounds[index],
+                    #                                   high=self.upper_bounds[index], hinge_softness=5)
+                    # new_value = bijector.forward([parameter_vector[index]])
+                    # print(new_value)
+                    # print(np.array(parameter_vector[index], float))
+                    # transform_log_jacobian += bijector.forward_log_det_jacobian(np.array(parameter_vector[index],
+                    #                                                                      float), 0)
                     # logit_input = (parameter_vector[index] -
                     #                self.lower_bounds[index]) * ((self.upper_bounds[index] -
                     #                                              self.lower_bounds[index]) ** (-1.0))
-                    # new_value = np.array(self.logit(parameter_vector[index], index), float)
-                    # transform_log_jacobian += np.array(np.log(self.upper_bounds[index] - self.lower_bounds[index]) - \
-                    #                                    np.log(1 + np.exp(-new_value)) + \
-                    #                                    np.log(1. - self.inverse_logit(new_value)), float)
-                    print(new_value)
+                    new_value = np.array(self.logit(parameter_vector[index], index), float)
+                    transform_log_jacobian += np.array(np.log(self.upper_bounds[index] - self.lower_bounds[index]) - \
+                                                       np.log(1 + np.exp(-new_value)) + \
+                                                       np.log(1. - self.inverse_logit(new_value)), float)
                     transformed_parameter_vector = ops.index_update(transformed_parameter_vector,
-                                                                    ops.index[index], new_value[0])
+                                                                    ops.index[index], new_value)
                 else:
                     raise TypeError("Please make sure your parameter bounds are type float or None.")
             # Get the base likelihood, add the jacobian, make sure it is a float:
