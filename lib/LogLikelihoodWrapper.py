@@ -20,11 +20,11 @@ class LogLikelihoodWrapper:
 
     def logit(self, value, index):
         transformed_value = (value - self.lower_bounds[index]) * ((self.upper_bounds[index] -
-                                                                   self.lower_bounds[index])**(-1.))
+                                                                   self.lower_bounds[index]) ** (-1.))
         return np.log(transformed_value) - np.log(1. - transformed_value)
 
     def inverse_logit(self, value):
-        return (1 + np.exp(-value))**(-1.)
+        return (1 + np.exp(-value)) ** (-1.)
 
     def get_log_likelihood(self, parameter_vector):
         """

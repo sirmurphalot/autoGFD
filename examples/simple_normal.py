@@ -6,6 +6,7 @@
 """
 import os
 from examples.fiducial_functions.simple_normal_fiducial_functions import *
+import math
 import jax.numpy as np
 from lib.FidHMC import FidHMC
 from jax import random
@@ -43,6 +44,9 @@ def graph_results():
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/SimpleNormal_States.npy")
     log_probs = np.load(my_path + "/data/SimpleNormal_LogProbs.npy")
+
+    # Print out the acceptance probability:
+    # acceptance_prob = math.exp(np.min(log_accept_ratio, 0.))
 
     # Graph the parameter draws
     temp_sample_df = pd.DataFrame(states, columns=col_names)

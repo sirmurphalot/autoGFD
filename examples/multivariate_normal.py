@@ -82,7 +82,7 @@ def run_example(seed):
     true_theta = collapse_parameters(A_0, Lambda_0, true_mu).astype(float)
 
     # Pick a proposal A matrix whose values are between -1 and 1.
-    tempData = random.multivariate_normal(random.PRNGKey(13), true_mu, true_Sigma, shape=[n])
+    tempData = random.multivariate_normal(random.PRNGKey(seed), true_mu, true_Sigma, shape=[n])
     tempCovariance = (float(n)) ** (-1.) * np.matmul(tempData.transpose(), tempData)
     Lambda_0, u = np.linalg.eig(tempCovariance)
     Lambda_0 = np.diag(Lambda_0 ** 0.5)
@@ -115,8 +115,7 @@ def run_example(seed):
 
     # Create the object and perform NUTS:
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    print("GOT HERE")
-    states, log_probs = fhmc.run_NUTS(num_iters=2, burn_in=1, initial_value=theta_0)
+    states, log_probs = fhmc.run_NUTS(num_iters=2, burn_in=1, initial_value=theta_0, random_key=random.PRNGKey(seed))
 
     # Save the data if using simulation study:
     # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)

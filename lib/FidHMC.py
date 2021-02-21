@@ -11,10 +11,12 @@ from lib.EvaluationFunctionWrapper import EvaluationFunctionWrapper
 from lib.LogLikelihoodWrapper import LogLikelihoodWrapper
 from jax import random
 import jax.numpy as np
+import warnings
 from tensorflow_probability.substrates import jax as tfp
 
 tfd = tfp.distributions
 tfb = tfp.bijectors
+warnings.filterwarnings('ignore')
 
 
 class FidHMC:
@@ -86,7 +88,6 @@ class FidHMC:
                     logit_states = np.array([(states[:, index] -
                                                self.lower_bounds[index]) * ((self.upper_bounds[index] -
                                                                              self.lower_bounds[index]) ** (-1))], float)
-                    print(logit_states)
                     new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
                                                  logit_states.transpose()), axis=1)
                 else:
