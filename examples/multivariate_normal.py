@@ -10,11 +10,11 @@ import jax.numpy as np
 import numpy as onp
 from lib.FidHMC import FidHMC
 from jax import random, ops
-import math
-import seaborn as sns
-import pandas as pd
+# import math
+# import seaborn as sns
+# import pandas as pd
 import matplotlib.pyplot as plt
-from tensorflow_probability.substrates import jax as tfp
+# from tensorflow_probability.substrates import jax as tfp
 
 
 def uncollapse_parameters(theta):
@@ -52,17 +52,39 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
     return theta
 
 
-def run_example():
+def run_example(seed):
     # Initial four draws from a MVN distribution:
     n = 4
-    mu = np.asarray([-1., 1., -1., 1.])
-    tempSigma = np.diag(np.asarray(range(4)).astype(float) + 1.) * 10.
-    tempData = random.multivariate_normal(random.PRNGKey(13), mu, tempSigma, shape=[n])
+    true_mu = np.asarray([1., 2., 3., 1.])
+    true_Sigma = np.asarray([[4., 1., 0., 0.],
+                             [1., 1., 0., 1.],
+                             [0., 0., 9., 1.],
+                             [0., 1., 1., 4.]]).astype(float)
+    Lambda_0, u = np.linalg.eig(true_Sigma)
+    Lambda_0 = np.diag(Lambda_0 ** 0.5)
+    dim = len(true_mu)
+    int_string = "%0" + str(dim) + "d"
+    my_count = 0
+    originalsign = np.sign(np.linalg.det(u)).astype(int)
+    for i in range((2 ** dim - 1)):
+        bits_string = int_string % int(bin(i)[2:])
+        temp_signs = np.asarray(2 * onp.asarray(list(bits_string)).astype(int) - 1)
+        if 1 == originalsign * np.prod(temp_signs):
+            temp_u = np.matmul(u, np.diag(temp_signs.astype(float)))
+            temp_Am = np.linalg.solve((np.identity(dim) + temp_u), (np.identity(dim) - temp_u))
+            temp_Av = np.tril(temp_Am)
+            magnitude_less_than_1 = np.asarray([[-1. < x < 1. for x in y] for y in temp_Av]).reshape(1, dim ** 2)
+            if np.all(magnitude_less_than_1):
+                u = temp_u
+                my_count = my_count + 1
+    A_0 = np.linalg.solve(np.identity(4) + u, np.identity(4) - u)
+    true_theta = collapse_parameters(A_0, Lambda_0, true_mu).astype(float)
+
+    # Pick a proposal A matrix whose values are between -1 and 1.
+    tempData = random.multivariate_normal(random.PRNGKey(13), true_mu, true_Sigma, shape=[n])
     tempCovariance = (float(n)) ** (-1.) * np.matmul(tempData.transpose(), tempData)
     Lambda_0, u = np.linalg.eig(tempCovariance)
     Lambda_0 = np.diag(Lambda_0 ** 0.5)
-
-    # Pick a A matrix whose values are between -1 and 1.
     dim = len(mu)
     int_string = "%0" + str(dim) + "d"
     my_count = 0
@@ -81,25 +103,26 @@ def run_example():
     A_0 = np.linalg.solve(np.identity(4) + u, np.identity(4) - u)
 
     # Establish true parameters, data, and initial theta value
-    true_theta = collapse_parameters(A_0, Lambda_0, mu).astype(float)
-    data_0 = random.multivariate_normal(random.PRNGKey(13), mu,
-                                        np.matmul(u, np.matmul(Lambda_0, u.transpose())), shape=[n])
+    data_0 = random.multivariate_normal(random.PRNGKey(seed), true_mu, true_Sigma, shape=[n])
     theta_0 = np.asarray([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1., 1., 1., 1., 1., 1., 1., 1.])
     lower_bounds = [-1., -1., -1., -1., -1., -1., None, None, None, None, None, None, None, None]
     upper_bounds = [1., 1., 1., 1., 1., 1., None, None, None, None, None, None, None, None]
     a, l, m = uncollapse_parameters(true_theta)
     my_path = os.path.dirname(os.path.abspath(__file__))
-    np.save(my_path + "/data/MVN_trueA.npy", a)
-    np.save(my_path + "/data/MVN_trueLambda.npy", l)
-    np.save(my_path + "/data/MVN_trueMu.npy", m)
+    # np.save(my_path + "/data/MVN_trueA.npy", a)
+    # np.save(my_path + "/data/MVN_trueLambda.npy", l)
+    # np.save(my_path + "/data/MVN_trueMu.npy", m)
 
     # Create the object and perform NUTS:
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
     states, log_probs = fhmc.run_NUTS(num_iters=50, burn_in=25, initial_value=theta_0)
+    # Save the data if using simulation study:
+    np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_JOBID') + ".npy", states)
 
     # Save the data:
-    np.save(my_path + "/data/MVN_States.npy", states)
-    np.save(my_path + "/data/MVN_LogProbs.npy", log_probs)
+    # np.save(my_path + "/data/MVN_States.npy", states)
+    # np.save(my_path + "/data/MVN_LogProbs.npy", log_probs)
+
 
 def create_plots():
     # Get Parameter Names
@@ -120,5 +143,6 @@ def create_plots():
     plt.xlabel('Iterations of NUTS')
     plt.savefig(my_path+'/plots/MVN_mcmc_log_probability.png')
 
-run_example()
+
+run_example(os.getenv('SLURM_JOBID'))
 create_plots()

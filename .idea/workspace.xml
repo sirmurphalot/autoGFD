@@ -2,8 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b733d030-aee8-4fcf-87dd-fa044b7e3aa3" name="Default Changelist" comment="changed some minor files stuff">
+      <change afterPath="$PROJECT_DIR$/examples/data/MVN_LogProbs.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/data/MVN_States.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/data/MVN_trueA.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/data/MVN_trueLambda.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/data/MVN_trueMu.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/plots/MVN_mcmc_log_probability.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/multivariate_normal.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/multivariate_normal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/simple_normal.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/simple_normal.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/LogLikelihoodWrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/LogLikelihoodWrapper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

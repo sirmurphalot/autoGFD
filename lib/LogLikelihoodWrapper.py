@@ -55,6 +55,7 @@ class LogLikelihoodWrapper:
                     print(new_value)
                     print([parameter_vector[index]])
                     transform_log_jacobian += bijector.forward_log_det_jacobian([parameter_vector[index]], 1)
+                    print("GOT HERE")
                     transformed_parameter_vector = ops.index_update(transformed_parameter_vector,
                                                                     ops.index[index], new_value[0])
             # Get the base likelihood, add the jacobian, make sure it is a float:

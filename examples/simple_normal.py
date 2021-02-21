@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 global true_theta
 true_theta = [-0.5, 3.2, 1.0, 1., 1., 1.]
 
+
 def run_example():
     # Establish true parameters, data, and initial theta value:
     data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
