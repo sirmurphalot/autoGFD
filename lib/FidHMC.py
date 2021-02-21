@@ -11,8 +11,8 @@ from lib.EvaluationFunctionWrapper import EvaluationFunctionWrapper
 from lib.LogLikelihoodWrapper import LogLikelihoodWrapper
 from jax import random
 import jax.numpy as np
-import tensorflow_probability as tfp_classic
 from tensorflow_probability.substrates import jax as tfp
+
 tfd = tfp.distributions
 tfb = tfp.bijectors
 
@@ -21,13 +21,15 @@ class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
                  parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None):
-        self.ll = LogLikelihoodWrapper(log_likelihood_function, observed_data, lower_bounds, upper_bounds)
+        self.ll = LogLikelihoodWrapper(log_likelihood_function, observed_data,
+                                       lower_bounds, upper_bounds).get_log_likelihood
         self.dga_func = DGAWrapper(dga_function).get_dga_function
         self.eval_func = EvaluationFunctionWrapper(evaluation_function).get_eval_function
         self.param_dim = parameter_dimension
         self.data = observed_data
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
+        self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
 
     def _fll(self, theta):
         """
@@ -38,9 +40,8 @@ class FidHMC:
         Returns:
             log_sum: the log fiducial likelihood based on the data likelihood and the DGA.
         """
-        log_sum = self.ll.get_log_likelihood(theta)
-        diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
-        log_sum += np.log(diff_dga.calculate_fiducial_jacobian_quantity_l2(theta))
+        log_sum = self.ll(theta)
+        log_sum += np.log(self.diff_dga.calculate_fiducial_jacobian_quantity_l2(theta)).astype(float)
         return log_sum
 
     def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=1e-3):
@@ -70,25 +71,32 @@ class FidHMC:
                                          num_burnin_steps=burn_in,
                                          seed=key)
         elif self.lower_bounds is not None and self.upper_bounds is not None:
+            print("GOT HERE AS WELL 3")
             states, log_probs = tfp.mcmc.sample_chain(num_iters,
                                                       current_state=initial_value,
                                                       kernel=kernel,
                                                       trace_fn=lambda _, results: results.target_log_prob,
                                                       num_burnin_steps=burn_in,
                                                       seed=key)
+            print("GOT HERE AS WELL 2")
             new_states = np.zeros(states.shape[0])
             for index in range(self.param_dim):
                 if self.lower_bounds[index] is None or self.upper_bounds[index] is None:
-                    new_states = np.concatenate((new_states.reshape(states.shape[0], index+1),
+                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
                                                  np.asarray([states[:, index]]).transpose()), axis=1)
+                elif type(self.lower_bounds[index]) is float and type(self.upper_bounds[index]) is float:
+                    print("GOT HERE AS WELL")
+                    logit_states = np.asarray((states[:, index] -
+                                               self.lower_bounds[index]) * ((self.upper_bounds[index] -
+                                                                             self.lower_bounds[index]) ** (-1)))
+                    print(logit_states)
+                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                                 logit_states), axis=1)
                 else:
-                    bijector = tfb.SoftClip(low=self.lower_bounds[index],
-                                            high=self.upper_bounds[index], hinge_softness=5)
-                    new_states = np.concatenate((new_states.reshape(states.shape[0], index+1),
-                                                 np.asarray([bijector.forward(states[:, index])]).transpose()), axis=1)
+                    raise TypeError("Please make sure your parameter bounds are type float or None.")
             new_states = new_states[:, 1:]
             return new_states, log_probs
         else:
-            print("Please make sure your parameter bounds are properly formatted.  "
-                  "One seems to be None and the other is not None.")
-            raise ValueError
+            raise ValueError("Please make sure your parameter bounds are properly formatted.  "
+                             "At a given index, both lower and upper bounds must be equal and must be"
+                             "either float type or None.")

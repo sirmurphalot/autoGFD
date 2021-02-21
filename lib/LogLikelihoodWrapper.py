@@ -11,11 +11,20 @@ class LogLikelihoodWrapper:
         Author: Alexander C. Murph
         Date: 2/20/21
     """
+
     def __init__(self, raw_likelihood, data, lower_bounds, upper_bounds):
         self.ll = raw_likelihood
         self.data = data
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
+
+    def logit(self, value, index):
+        transformed_value = (value - self.lower_bounds[index]) * ((self.upper_bounds[index] -
+                                                                   self.lower_bounds[index])**(-1.))
+        return np.log(transformed_value) - np.log(1. - transformed_value)
+
+    def inverse_logit(self, value):
+        return (1 + np.exp(-value))**(-1.)
 
     def get_log_likelihood(self, parameter_vector):
         """
@@ -32,11 +41,9 @@ class LogLikelihoodWrapper:
             log_likelihood_value = np.array(log_likelihood_value_raw, float)
             return log_likelihood_value
         elif self.lower_bounds is None:
-            print("If lower bounds of parameters are set, upper bounds must be as well.")
-            raise ValueError
+            raise ValueError("If lower bounds of parameters are set, upper bounds must be as well.")
         elif self.upper_bounds is None:
-            print("If upper bounds of parameters are set, lower bounds must be as well.")
-            raise ValueError
+            raise ValueError("If upper bounds of parameters are set, lower bounds must be as well.")
         else:
             assert len(parameter_vector) == len(self.lower_bounds), "Please make sure the dimension of your bounds " \
                                                                     "matches your input vector. "
@@ -48,16 +55,27 @@ class LogLikelihoodWrapper:
             for index in range(len(parameter_vector)):
                 if self.lower_bounds[index] is None or self.upper_bounds[index] is None:
                     continue
-                else:
+                elif type(self.lower_bounds[index]) is float and type(self.lower_bounds[index]) is float:
                     bijector = tfp.bijectors.SoftClip(low=self.lower_bounds[index],
                                                       high=self.upper_bounds[index], hinge_softness=5)
                     new_value = bijector.forward([parameter_vector[index]])
                     print(new_value)
-                    print([parameter_vector[index]])
-                    transform_log_jacobian += bijector.forward_log_det_jacobian([parameter_vector[index]], 1)
+                    print(np.array(parameter_vector[index], float))
+                    transform_log_jacobian += bijector.forward_log_det_jacobian(np.array(parameter_vector[index],
+                                                                                         float), 0)
                     print("GOT HERE")
+                    # logit_input = (parameter_vector[index] -
+                    #                self.lower_bounds[index]) * ((self.upper_bounds[index] -
+                    #                                              self.lower_bounds[index]) ** (-1.0))
+                    # new_value = np.array(self.logit(parameter_vector[index], index), float)
+                    # transform_log_jacobian += np.array(np.log(self.upper_bounds[index] - self.lower_bounds[index]) - \
+                    #                                    np.log(1 + np.exp(-new_value)) + \
+                    #                                    np.log(1. - self.inverse_logit(new_value)), float)
+                    print(new_value)
                     transformed_parameter_vector = ops.index_update(transformed_parameter_vector,
                                                                     ops.index[index], new_value[0])
+                else:
+                    raise TypeError("Please make sure your parameter bounds are type float or None.")
             # Get the base likelihood, add the jacobian, make sure it is a float:
             likelihood_value_raw = self.ll(transformed_parameter_vector, self.data)
             likelihood_value_raw += transform_log_jacobian

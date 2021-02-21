@@ -15,6 +15,7 @@ from jax import random, ops
 # import pandas as pd
 import matplotlib.pyplot as plt
 # from tensorflow_probability.substrates import jax as tfp
+# os.environ['XLA_FLAGS'] = '--xla_dump_to=logfiles/'
 
 
 def uncollapse_parameters(theta):
@@ -54,7 +55,7 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 
 def run_example(seed):
     # Initial four draws from a MVN distribution:
-    n = 4
+    n = 100
     true_mu = np.asarray([1., 2., 3., 1.])
     true_Sigma = np.asarray([[4., 1., 0., 0.],
                              [1., 1., 0., 1.],
@@ -85,7 +86,7 @@ def run_example(seed):
     tempCovariance = (float(n)) ** (-1.) * np.matmul(tempData.transpose(), tempData)
     Lambda_0, u = np.linalg.eig(tempCovariance)
     Lambda_0 = np.diag(Lambda_0 ** 0.5)
-    dim = len(mu)
+    dim = len(true_mu)
     int_string = "%0" + str(dim) + "d"
     my_count = 0
     originalsign = np.sign(np.linalg.det(u)).astype(int)
@@ -104,10 +105,9 @@ def run_example(seed):
 
     # Establish true parameters, data, and initial theta value
     data_0 = random.multivariate_normal(random.PRNGKey(seed), true_mu, true_Sigma, shape=[n])
-    theta_0 = np.asarray([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1., 1., 1., 1., 1., 1., 1., 1.])
+    theta_0 = collapse_parameters(A_0, Lambda_0, true_mu)
     lower_bounds = [-1., -1., -1., -1., -1., -1., None, None, None, None, None, None, None, None]
     upper_bounds = [1., 1., 1., 1., 1., 1., None, None, None, None, None, None, None, None]
-    a, l, m = uncollapse_parameters(true_theta)
     my_path = os.path.dirname(os.path.abspath(__file__))
     # np.save(my_path + "/data/MVN_trueA.npy", a)
     # np.save(my_path + "/data/MVN_trueLambda.npy", l)
@@ -115,9 +115,11 @@ def run_example(seed):
 
     # Create the object and perform NUTS:
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_probs = fhmc.run_NUTS(num_iters=50, burn_in=25, initial_value=theta_0)
+    print("GOT HERE")
+    states, log_probs = fhmc.run_NUTS(num_iters=2, burn_in=1, initial_value=theta_0)
+
     # Save the data if using simulation study:
-    np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_JOBID') + ".npy", states)
+    # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
 
     # Save the data:
     # np.save(my_path + "/data/MVN_States.npy", states)
@@ -143,6 +145,6 @@ def create_plots():
     plt.xlabel('Iterations of NUTS')
     plt.savefig(my_path+'/plots/MVN_mcmc_log_probability.png')
 
-
-run_example(os.getenv('SLURM_JOBID'))
+# int(os.getenv('SLURM_ARRAY_TASK_ID'))
+run_example(13)
 create_plots()
