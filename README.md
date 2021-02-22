@@ -1,2 +1,2 @@
-# CFHMC
-Constrained Fiducial Hamiltonian Monte Carlo
+# FHMC
+Fiducial Hamiltonian Monte Carlo
