@@ -6,7 +6,7 @@
     Author: Alexander C. Murph
     Date: 2/14/21
 """
-from jax import jacrev
+from jax import jacrev, jit
 import jax.numpy as np
 
 
@@ -14,7 +14,7 @@ class DifferentiatorDGA:
     def __init__(self, dga_function, evaluation_function, parameter_dimension, observed_data):
         self.dga_function = dga_function
         try:
-            self.jacobian_dga = jacrev(dga_function)
+            self.jacobian_dga = jit(jacrev(dga_function))
         except:
             print("DGA function not properly constructed.")
         self.evaluation_function = evaluation_function
@@ -39,7 +39,7 @@ class DifferentiatorDGA:
                 temp_eval = self.evaluation_function(theta_0, self.data[index])
                 fiducial_jacobian_matrix = np.concatenate(
                     (fiducial_jacobian_matrix, self.jacobian_dga(theta_0, temp_eval)), axis=0)
-        return fiducial_jacobian_matrix
+        return fiducial_jacobian_matrix.astype(float)
 
     def calculate_fiducial_jacobian_quantity_l2(self, theta_0):
         """
@@ -52,5 +52,10 @@ class DifferentiatorDGA:
             fid_jac: the fiducial jacobian determinant based on the l2 norm.
         """
         fid_jac_matrix = self.calculate_fiducial_jacobian_matrix(theta_0)
-        fid_jac = np.sqrt(np.linalg.det(np.matmul(fid_jac_matrix.transpose(), fid_jac_matrix)))
+        fid_jac = matrix_inner_product_function(fid_jac_matrix)
         return fid_jac
+
+
+@jit
+def matrix_inner_product_function(fid_jac_matrix):
+    return np.sqrt(np.linalg.det(np.matmul(fid_jac_matrix.transpose(), fid_jac_matrix)))

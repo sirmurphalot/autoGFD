@@ -11,11 +11,9 @@ import numpy as onp
 from lib.FidHMC import FidHMC
 from jax import random, ops
 # import math
-# import seaborn as sns
+import seaborn as sns
 # import pandas as pd
 import matplotlib.pyplot as plt
-# from tensorflow_probability.substrates import jax as tfp
-# os.environ['XLA_FLAGS'] = '--xla_dump_to=logfiles/'
 
 
 def uncollapse_parameters(theta):
@@ -55,7 +53,7 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 
 def run_example(seed):
     # Initial four draws from a MVN distribution:
-    n = 4
+    n = 5
     true_mu = np.asarray([1., 2., 3., 1.])
     true_Sigma = np.asarray([[4., 1., 0., 0.],
                              [1., 1., 0., 1.],
@@ -108,21 +106,23 @@ def run_example(seed):
     theta_0 = collapse_parameters(A_0, Lambda_0, true_mu)
     lower_bounds = [-1., -1., -1., -1., -1., -1., None, None, None, None, None, None, None, None]
     upper_bounds = [1., 1., 1., 1., 1., 1., None, None, None, None, None, None, None, None]
+    # lower_bounds = None
+    # upper_bounds = None
     my_path = os.path.dirname(os.path.abspath(__file__))
-    # np.save(my_path + "/data/MVN_trueA.npy", a)
-    # np.save(my_path + "/data/MVN_trueLambda.npy", l)
-    # np.save(my_path + "/data/MVN_trueMu.npy", m)
+    np.save(my_path + "/data/MVN_trueA.npy", A_0)
+    np.save(my_path + "/data/MVN_trueLambda.npy", Lambda_0)
+    np.save(my_path + "/data/MVN_trueMu.npy", true_mu)
 
     # Create the object and perform NUTS:
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_probs = fhmc.run_NUTS(num_iters=2, burn_in=1, initial_value=theta_0, random_key=random.PRNGKey(seed))
+    states, log_probs = fhmc.run_NUTS(num_iters=2000, burn_in=1000, initial_value=theta_0, random_key=seed)
 
     # Save the data if using simulation study:
     # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
 
     # Save the data:
-    # np.save(my_path + "/data/MVN_States.npy", states)
-    # np.save(my_path + "/data/MVN_LogProbs.npy", log_probs)
+    np.save(my_path + "/data/MVN_States.npy", states)
+    np.save(my_path + "/data/MVN_LogProbs.npy", log_probs)
 
 
 def create_plots():
@@ -134,15 +134,41 @@ def create_plots():
 
     # Load the data
     my_path = os.path.dirname(os.path.abspath(__file__))
-    states = np.load(my_path + "/data/SimpleNormal_States.npy")
-    log_probs = np.load(my_path + "/data/SimpleNormal_LogProbs.npy")
+    states = np.load(my_path + "/data/MVN_States.npy")
+    log_probs = np.load(my_path + "/data/MVN_LogProbs.npy")
+
+    # Graph Frobenius norm of covariance matrices
+    i_plus_a = np.identity(len(true_mu)) + true_a
+    true_sigma_1_half = np.matmul(np.transpose(i_plus_a), np.linalg.solve(i_plus_a, true_lambda))
+    true_sigma = np.matmul(true_sigma_1_half, np.transpose(true_sigma_1_half))
+    true_norm = np.array(np.linalg.norm(true_sigma, ord="fro"), float)
+    norms = np.array([np.linalg.norm(true_sigma, ord="fro")], float)
+
+    for index in range(states.shape[0]):
+        a, l, mu = uncollapse_parameters(states[index,])
+        i_plus_a = np.identity(len(mu)) + a
+        sigma_1_half = np.matmul(np.transpose(i_plus_a), np.linalg.solve(i_plus_a, l))
+        sigma = np.matmul(sigma_1_half, np.transpose(sigma_1_half))
+        norms = np.concatenate((norms, np.array([np.linalg.norm(sigma, ord="fro")], float)))
+    norms = norms[1:]
+    print(norms)
+    plt.figure()
+    sns.set_theme(style="whitegrid")
+    plt.clf()
+    plt.cla()
+    fig, ax = plt.subplots()
+    ax.axvline(true_norm, color="red")
+    h = sns.boxplot(x=norms, ax=ax)
+    plt.xlabel('Frobenius Norm')
+    h.figure.savefig(my_path + "/plots/MVN_FrobeniusNorms.png")
 
     # Graph the log probability
     plt.figure()
     plt.plot(log_probs)
     plt.ylabel('Target Log Prob')
     plt.xlabel('Iterations of NUTS')
-    plt.savefig(my_path+'/plots/MVN_mcmc_log_probability.png')
+    plt.savefig(my_path + '/plots/MVN_mcmc_log_probability.png')
+
 
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
 run_example(13)
