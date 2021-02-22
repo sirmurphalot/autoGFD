@@ -83,7 +83,7 @@ class FidHMC:
             for index in range(self.param_dim):
                 if self.lower_bounds[index] is None or self.upper_bounds[index] is None:
                     new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 np.asarray([states[:, index]]).transpose()), axis=1)
+                                                 np.array([states[:, index]], float).transpose()), axis=1)
                 elif type(self.lower_bounds[index]) is float and type(self.upper_bounds[index]) is float:
                     logit_states = np.array([(states[:, index] -
                                               self.lower_bounds[index]) * ((self.upper_bounds[index] -
