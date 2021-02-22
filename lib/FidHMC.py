@@ -46,7 +46,7 @@ class FidHMC:
         log_sum += np.log(self.diff_dga.calculate_fiducial_jacobian_quantity_l2(theta)).astype(float)
         return log_sum
 
-    def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=1e-3):
+    def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=1e-2):
         """
         Method to perform a No-U-Turn sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
@@ -61,7 +61,6 @@ class FidHMC:
             states: the parameter samples drawn from the MCMC chain.
             log_probs: the log probability values of the fiducial density at each iteration.
         """
-        assert num_iters > burn_in, "You are burning more samples than you are taking."
 
         kernel = tfp.mcmc.NoUTurnSampler(self._fll, step_size=step_size)
         key, sample_key = random.split(random.PRNGKey(random_key))
