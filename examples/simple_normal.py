@@ -20,8 +20,9 @@ true_theta = [-0.5, 3.2, 1.0, 1., 1., 1.]
 
 def run_example():
     # Establish true parameters, data, and initial theta value:
+    n = 50
     data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
-                                        np.diag(np.asarray(true_theta[3:])), shape=[2])
+                                        np.diag(np.asarray(true_theta[3:])), shape=[n])
     theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
 
     # Create the object and perform NUTS:

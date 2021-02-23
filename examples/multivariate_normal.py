@@ -53,7 +53,7 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 
 def run_example(seed):
     # Initial four draws from a MVN distribution:
-    n = 5
+    n = 25
     true_mu = np.asarray([1., 2., 3., 1.])
     true_Sigma = np.asarray([[4., 1., 0., 0.],
                              [1., 1., 0., 1.],
@@ -115,7 +115,7 @@ def run_example(seed):
 
     # Create the object and perform NUTS:
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_probs = fhmc.run_NUTS(num_iters=2000, burn_in=1000, initial_value=theta_0, random_key=seed)
+    states, log_probs = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, random_key=seed)
 
     # Save the data if using simulation study:
     # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
@@ -136,7 +136,7 @@ def create_plots():
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/MVN_States.npy")
     log_probs = np.load(my_path + "/data/MVN_LogProbs.npy")
-
+    print(states)
     # Graph Frobenius norm of covariance matrices
     i_plus_a = np.identity(len(true_mu)) + true_a
     true_sigma_1_half = np.matmul(np.transpose(i_plus_a), np.linalg.solve(i_plus_a, true_lambda))
@@ -151,7 +151,6 @@ def create_plots():
         sigma = np.matmul(sigma_1_half, np.transpose(sigma_1_half))
         norms = np.concatenate((norms, np.array([np.linalg.norm(sigma, ord="fro")], float)))
     norms = norms[1:]
-    print(norms)
     plt.figure()
     sns.set_theme(style="whitegrid")
     plt.clf()
@@ -169,7 +168,11 @@ def create_plots():
     plt.xlabel('Iterations of NUTS')
     plt.savefig(my_path + '/plots/MVN_mcmc_log_probability.png')
 
-
+# Note: if you want to use GPU on cluster, make sure you have:
+# pip install --upgrade jax jaxlib==0.1.59+cuda112 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+# Make sure cuda 11.2 is added in your module list, and run:
+# sudo ln -s /path/to/cuda /usr/local/cuda-11.2
+# Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
-run_example(13)
+# run_example(13)
 create_plots()
