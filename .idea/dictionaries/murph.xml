@@ -6,6 +6,7 @@
       <w>fiducial</w>
       <w>iters</w>
       <w>jacobian</w>
+      <w>logit</w>
       <w>murph</w>
       <w>probs</w>
     </words>

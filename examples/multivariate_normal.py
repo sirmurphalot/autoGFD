@@ -174,5 +174,5 @@ def create_plots():
 # sudo ln -s /path/to/cuda /usr/local/cuda-11.2
 # Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
-# run_example(13)
+# run_example(13)#int(os.getenv('SLURM_ARRAY_TASK_ID')))
 create_plots()

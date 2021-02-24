@@ -46,7 +46,7 @@ class FidHMC:
         log_sum += np.log(self.diff_dga.calculate_fiducial_jacobian_quantity_l2(theta)).astype(float)
         return log_sum
 
-    def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=1e-5):
+    def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5):
         """
         Method to perform a No-U-Turn sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
@@ -80,15 +80,29 @@ class FidHMC:
                                                       seed=key)
             new_states = np.zeros(states.shape[0])
             for index in range(self.param_dim):
-                if self.lower_bounds[index] is None or self.upper_bounds[index] is None:
+                if self.lower_bounds[index] is None and self.upper_bounds[index] is None:
                     new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
                                                  np.array([states[:, index]], float).transpose()), axis=1)
                 elif type(self.lower_bounds[index]) is float and type(self.upper_bounds[index]) is float:
-                    logit_states = np.array([(states[:, index] -
-                                              self.lower_bounds[index]) * ((self.upper_bounds[index] -
-                                                                            self.lower_bounds[index]) ** (-1))], float)
+                    # logit_states = np.array([(states[:, index] - self.lower_bounds[index]) * ((self.upper_bounds[
+                    # index] - self.lower_bounds[index]) ** (-1))], float) new_states = np.concatenate((
+                    # new_states.reshape(states.shape[0], index + 1), logit_states.transpose()), axis=1)
+                    #
+                    logit_transform_states = np.array([self.lower_bounds[index] +
+                                             (self.upper_bounds[index] - self.lower_bounds[index]) *
+                                             (1. + np.exp(states[:, index]))**(-1.)], float)
                     new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 logit_states.transpose()), axis=1)
+                                                 logit_transform_states.transpose()), axis=1)
+                elif type(self.lower_bounds[index]) is float and self.upper_bounds[index] is None:
+                    # Perform the lower logarithmic transform and add in the appropriate log jacobian.
+                    log_transform_states = np.array([np.exp(states[:, index]) + self.lower_bounds[index]], float)
+                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                                 log_transform_states.transpose()), axis=1)
+                elif self.lower_bounds[index] is None and type(self.upper_bounds[index]) is float:
+                    # Perform the upper logarithmic transform and add in the appropriate log jacobian.
+                    log_transform_states = np.array([self.lower_bounds[index] - np.exp(states[:, index])], float)
+                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                                 log_transform_states.transpose()), axis=1)
                 else:
                     raise TypeError("Please make sure your parameter bounds are type float or None.")
             new_states = new_states[:, 1:]

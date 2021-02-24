@@ -24,9 +24,11 @@ def run_example():
     data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
                                         np.diag(np.asarray(true_theta[3:])), shape=[n])
     theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
+    lower_bounds = [None, None, None, 0., 0., 0.]
+    upper_bounds = [None, None, None, None, None, None]
 
     # Create the object and perform NUTS:
-    fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0)
+    fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
     states, log_probs = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0)
 
     # Save the data:
@@ -45,9 +47,6 @@ def graph_results():
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/SimpleNormal_States.npy")
     log_probs = np.load(my_path + "/data/SimpleNormal_LogProbs.npy")
-
-    # Print out the acceptance probability:
-    # acceptance_prob = math.exp(np.min(log_accept_ratio, 0.))
 
     # Graph the parameter draws
     temp_sample_df = pd.DataFrame(states, columns=col_names)
