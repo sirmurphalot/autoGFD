@@ -22,6 +22,10 @@ class DifferentiatorDGA:
         self.data = observed_data
         # Note that data is assumed to be nxp, where n is the number of observed iid samples.
         self.num_samples = observed_data.shape[0]
+# <<<<<<< Updated upstream
+# =======
+#         self.jac_matrix_partials = jacrev(self.calculate_fiducial_jacobian_matrix)
+# >>>>>>> Stashed changes
 
     def calculate_fiducial_jacobian_matrix(self, theta_0):
         """

@@ -48,17 +48,6 @@ class LogLikelihoodWrapper:
                 if self.lower_bounds[index] is None and self.upper_bounds[index] is None:
                     continue
                 elif type(self.lower_bounds[index]) is float and type(self.upper_bounds[index]) is float:
-                    # bijector = tfp.bijectors.SoftClip(low=self.lower_bounds[index],
-                    #                                   high=self.upper_bounds[index], hinge_softness=5)
-                    # new_value = bijector.forward([parameter_vector[index]])
-                    # print(new_value)
-                    # print(np.array(parameter_vector[index], float))
-                    # transform_log_jacobian += bijector.forward_log_det_jacobian(np.array(parameter_vector[index],
-                    #                                                                      float), 0)
-                    # logit_input = (parameter_vector[index] -
-                    #                self.lower_bounds[index]) * ((self.upper_bounds[index] -
-                    #                                              self.lower_bounds[index]) ** (-1.0))
-
                     # Perform the logit transform and add in the appropriate log jacobian.
                     inv_logit_value = np.array(inverse_logit(parameter_vector[index]), float)
                     transform_log_jacobian += np.array(np.log((self.upper_bounds[index] - self.lower_bounds[index]) *
@@ -87,13 +76,7 @@ class LogLikelihoodWrapper:
             likelihood_value_raw = self.ll(transformed_parameter_vector, self.data)
             likelihood_value_raw += transform_log_jacobian
             likelihood_value = np.array(likelihood_value_raw, float)
-            return likelihood_value
-
-
-# @jit
-# def logit(lower_bound, upper_bound, value):
-#     transformed_value = (value - lower_bound) * ((upper_bound - lower_bound) ** (-1.))
-#     return np.log(transformed_value) - np.log(1. - transformed_value)
+            return transformed_parameter_vector, likelihood_value
 
 @jit
 def inverse_logit(value):

@@ -12,6 +12,7 @@ from lib.FidHMC import FidHMC
 from jax import random
 import seaborn as sns
 import pandas as pd
+import time
 import matplotlib.pyplot as plt
 
 global true_theta
@@ -28,8 +29,24 @@ def run_example():
     upper_bounds = [None, None, None, None, None, None]
 
     # Create the object and perform NUTS:
+    t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
-    states, log_probs = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0)
+    # With bounds:
+    states, log_accept = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, step_size=1e-3)
+    # Without bounds:
+    # states, log_accept = fhmc.run_NUTS(num_iters=20000, burn_in=5000, initial_value=theta_0, step_size=2e-1)
+    # states, log_accept = fhmc.run_HMC_raw(num_iters=400, burn_in=200, starting_position=theta_0, step_size=5e-2,
+    #                                       mass_matrix=mass_matrix)
+    t1 = time.time()
+
+    # states, [new_step_size, log_accept] = fhmc.run_HMC(num_iters=1500, burn_in=1500, step_size=1e-2)
+    print("---------------------------------")
+    print("MCMC draw complete.")
+    print("Acceptance Ratio: ", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
+    # print("Acceptance Ratio: ", np.mean(log_accept))
+    # print("Final Step Size: ", new_step_size)
+    print("Execultion time: ", t1-t0)
+    print("---------------------------------")
 
     # Save the data:
     my_path = os.path.dirname(os.path.abspath(__file__))

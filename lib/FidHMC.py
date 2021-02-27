@@ -23,8 +23,13 @@ class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
                  parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None):
-        self.ll = jit(LogLikelihoodWrapper(log_likelihood_function, observed_data,
-                                           lower_bounds, upper_bounds).get_log_likelihood)
+# <<<<<<< Updated upstream
+        self.ll = log_likelihood_function
+# =======
+#         ll_wrapper = LogLikelihoodWrapper(log_likelihood_function, observed_data,
+#                                           lower_bounds, upper_bounds)
+#         self.ll = jit(log_likelihood_function)
+# >>>>>>> Stashed changes
         self.dga_func = jit(DGAWrapper(dga_function).get_dga_function)
         self.eval_func = jit(EvaluationFunctionWrapper(evaluation_function).get_eval_function)
         self.param_dim = parameter_dimension
@@ -32,6 +37,12 @@ class FidHMC:
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
         self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
+# <<<<<<< Updated upstream
+# =======
+#         self.jac_l2_value = jit(self.diff_dga.calculate_fiducial_jacobian_quantity_l2)
+#         self.hamiltonian = None
+#         self.dfnll = jacrev(self._fll)
+# >>>>>>> Stashed changes
 
     def _fll(self, theta):
         """
@@ -42,8 +53,9 @@ class FidHMC:
         Returns:
             log_sum: the log fiducial likelihood based on the data likelihood and the DGA.
         """
-        log_sum = self.ll(theta)
-        log_sum += np.log(self.diff_dga.calculate_fiducial_jacobian_quantity_l2(theta)).astype(float)
+        transformed_theta, log_transform_jacobian = transform_parameters(theta, self.lower_bounds, self.upper_bounds)
+        log_sum = np.array(self.ll(transformed_theta[0], self.data), float)
+        log_sum += np.log(self.jac_l2_value(transformed_theta[0])).astype(float)
         return log_sum
 
     def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5):
@@ -72,62 +84,72 @@ class FidHMC:
                                          num_burnin_steps=burn_in,
                                          seed=key)
         elif self.lower_bounds is not None and self.upper_bounds is not None:
-            states, log_probs = tfp.mcmc.sample_chain(num_iters,
-                                                      current_state=initial_value,
-                                                      kernel=kernel,
-                                                      trace_fn=lambda _, results: results.target_log_prob,
-                                                      num_burnin_steps=burn_in,
-                                                      seed=key)
-            new_states = np.zeros(states.shape[0])
-            for index in range(self.param_dim):
-                if self.lower_bounds[index] is None and self.upper_bounds[index] is None:
-                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 np.array([states[:, index]], float).transpose()), axis=1)
-                elif type(self.lower_bounds[index]) is float and type(self.upper_bounds[index]) is float:
-                    # logit_states = np.array([(states[:, index] - self.lower_bounds[index]) * ((self.upper_bounds[
-                    # index] - self.lower_bounds[index]) ** (-1))], float) new_states = np.concatenate((
-                    # new_states.reshape(states.shape[0], index + 1), logit_states.transpose()), axis=1)
-                    #
-                    logit_transform_states = np.array([self.lower_bounds[index] +
-                                             (self.upper_bounds[index] - self.lower_bounds[index]) *
-                                             (1. + np.exp(states[:, index]))**(-1.)], float)
-                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 logit_transform_states.transpose()), axis=1)
-                elif type(self.lower_bounds[index]) is float and self.upper_bounds[index] is None:
-                    # Perform the lower logarithmic transform and add in the appropriate log jacobian.
-                    log_transform_states = np.array([np.exp(states[:, index]) + self.lower_bounds[index]], float)
-                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 log_transform_states.transpose()), axis=1)
-                elif self.lower_bounds[index] is None and type(self.upper_bounds[index]) is float:
-                    # Perform the upper logarithmic transform and add in the appropriate log jacobian.
-                    log_transform_states = np.array([self.lower_bounds[index] - np.exp(states[:, index])], float)
-                    new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-                                                 log_transform_states.transpose()), axis=1)
-                else:
-                    raise TypeError("Please make sure your parameter bounds are type float or None.")
-            new_states = new_states[:, 1:]
-            return new_states, log_probs
+            states, is_accepted = tfp.mcmc.sample_chain(num_iters,
+                                                        current_state=initial_value,
+                                                        kernel=kernel,
+                                                        trace_fn=lambda _, pkr: pkr.log_accept_ratio,
+                                                        num_burnin_steps=burn_in,
+                                                        seed=key)
+            new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
+            return new_states, is_accepted
         else:
             raise ValueError("Please make sure your parameter bounds are properly formatted.  "
                              "At a given index, both lower and upper bounds must be equal and must be"
                              "either float type or None.")
 
 
-# @jit
-# def logit_transform_states(states, lower_bounds, upper_bounds):
-#     new_states = np.zeros(states.shape[0])
-#     print(lower_bounds[1])
-#     print(upper_bounds[1])
-#     for index in range(states.shape[1]):
-#         if lower_bounds[index] is None or upper_bounds[index] is None:
-#             new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-#                                          np.asarray([states[:, index]]).transpose()), axis=1)
-#         elif type(lower_bounds[index]) is float and type(upper_bounds[index]) is float:
-#             logit_states = np.array([(states[:, index] -
-#                                       lower_bounds[index]) * ((upper_bounds[index] -
-#                                                                lower_bounds[index]) ** (-1))], float)
-#             new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
-#                                          logit_states.transpose()), axis=1)
-#         else:
-#             raise TypeError("Please make sure your parameter bounds are type float or None.")
-#     return new_states[:, 1:]
+
+@jit
+def transform_parameters(states, lower_bounds, upper_bounds):
+    """
+    After drawing values from the MCMC chain that transforms to be unconstrained, transform back to the constrained
+    parameter space.
+    Args:
+        states: the unconstrained states.
+
+    Returns:
+        c_states: the constrained states.
+    """
+    if len(states.shape) == 1:
+        states = np.array(states).reshape(1, states.shape[0])
+    new_states = np.zeros(states.shape[0])
+    transform_log_jacobian = 0
+
+    if lower_bounds is None and upper_bounds is None:
+        return states, transform_log_jacobian
+    else:
+        for index in range(len(lower_bounds)):
+            if lower_bounds[index] is None and upper_bounds[index] is None:
+                new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                             np.array([states[:, index]], float).transpose()), axis=1)
+            elif lower_bounds[index] is not None and upper_bounds[index] is not None:
+                # Perform the logit transform.
+                inv_logit_value = np.array(inverse_logit(states[0, index]), float)
+                transform_log_jacobian += np.array(np.log((upper_bounds[index] - lower_bounds[index]) *
+                                                          inv_logit_value * (1. - inv_logit_value)), float)
+                logit_transform_states = np.array([lower_bounds[index] +
+                                                   (upper_bounds[index] - lower_bounds[index]) *
+                                                   inverse_logit(states[:, index])], float)
+                new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                             logit_transform_states.transpose()), axis=1)
+            elif upper_bounds[index] is None:
+                # Perform the lower logarithmic transform.
+                transform_log_jacobian += np.array(states[0, index], float)
+                log_transform_states = np.array([np.exp(states[:, index]) + lower_bounds[index]], float)
+                new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                             log_transform_states.transpose()), axis=1)
+            elif lower_bounds[index] is None:
+                # Perform the upper logarithmic transform.
+                transform_log_jacobian += np.array(states[0, index], float)
+                log_transform_states = np.array([lower_bounds[index] - np.exp(states[:, index])], float)
+                new_states = np.concatenate((new_states.reshape(states.shape[0], index + 1),
+                                             log_transform_states.transpose()), axis=1)
+            else:
+                raise TypeError("Please make sure your parameter bounds are type float or None.")
+    return new_states[:, 1:], transform_log_jacobian
+
+
+@jit
+def inverse_logit(value):
+    return (1. + np.exp(-value)) ** (-1.)
+

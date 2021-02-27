@@ -28,6 +28,16 @@ def eval_func(theta, data_row):
     ])
 
 
+# def log_likelihood(theta, data):
+#     log_sum = np.sum(np.log(stats.multivariate_normal.pdf(data, theta[0:3], np.diag(theta[3:]))))
+#     return log_sum
 def log_likelihood(theta, data):
-    log_sum = np.sum(np.log(stats.multivariate_normal.pdf(data, theta[0:3], np.diag(theta[3:]))))
+    log_sum = 0
+    mu_vector = theta[0:3]
+    cov_matrix = np.diag(theta[3:])
+    inv_cov_matrix = np.diag(np.reciprocal(theta[3:]))
+    for index in range(data.shape[0]):
+        mean_centered = data[index] - mu_vector
+        log_sum += -0.5 * len(data) * np.log(2. * np.pi) - 0.5 * np.log(np.linalg.det(cov_matrix)) - \
+                   0.5 * np.matmul(mean_centered, np.matmul(inv_cov_matrix, mean_centered.transpose()))
     return log_sum
