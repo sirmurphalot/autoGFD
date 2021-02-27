@@ -16,7 +16,7 @@ import time
 import matplotlib.pyplot as plt
 
 global true_theta
-true_theta = [-0.5, 3.2, 1.0, 1., 1., 1.]
+true_theta = [-0.5, 3.2, 1.0, 1.7, 0.4, 1.]
 
 
 def run_example():
@@ -32,7 +32,7 @@ def run_example():
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
     # With bounds:
-    states, log_accept = fhmc.run_NUTS(num_iters=150, burn_in=50, initial_value=theta_0, step_size=1e-3)
+    states, log_accept = fhmc.run_NUTS(num_iters=150000, burn_in=50000, initial_value=theta_0, step_size=15e-2)
     # Without bounds:
     # states, log_accept = fhmc.run_NUTS(num_iters=20000, burn_in=5000, initial_value=theta_0, step_size=2e-1)
     # states, log_accept = fhmc.run_HMC_raw(num_iters=400, burn_in=200, starting_position=theta_0, step_size=5e-2,
@@ -68,7 +68,7 @@ def graph_results():
     accept_ratio = np.load(my_path + "/data/SimpleNormal_AcceptanceRatio.npy")
     execution_time = np.load(my_path + "/data/SimpleNormal_ExecutionTime.npy")
     # Graph the parameter draws
-    states = states[(np.abs(stats.zscore(states)) < 3.).all(axis=1)]
+    # states = states[(np.abs(stats.zscore(states)) < 3.).all(axis=1)]
     temp_sample_df = pd.DataFrame(states)
     sample_df = temp_sample_df.melt()
     g = sns.displot(sample_df, x="value", row="variable", kind="kde", fill=1, color="blue",
