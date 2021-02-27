@@ -16,7 +16,7 @@ import time
 import matplotlib.pyplot as plt
 
 global true_theta
-true_theta = [-0.5, 3.2, 1.0, 1.7, 0.4, 1.]
+true_theta = [-0.5, 3.2, 1.0, 1.9, 1.1, 2.5]
 
 
 def run_example():

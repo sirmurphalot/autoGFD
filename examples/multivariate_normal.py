@@ -54,7 +54,7 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 
 def run_example(seed):
     # Initial four draws from a MVN distribution:
-    n = 25
+    n = 5
     true_mu = np.asarray([1., 2., 3., 1.])
     true_Sigma = np.asarray([[4., 1., 0., 0.],
                              [1., 1., 0., 1.],
@@ -117,7 +117,7 @@ def run_example(seed):
     # Create the object and perform NUTS:
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_probs = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, random_key=seed)
+    states, log_accept = fhmc.run_NUTS(num_iters=1500, burn_in=500, initial_value=theta_0, random_key=seed)
     t1 = time.time()
 
     print("---------------------------------")
