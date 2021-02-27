@@ -23,10 +23,6 @@ class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
                  parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None):
-# =======
-#         ll_wrapper = LogLikelihoodWrapper(log_likelihood_function, observed_data,
-#                                           lower_bounds, upper_bounds)
-#         self.ll = jit(log_likelihood_function)
         self.ll = jit(log_likelihood_function)
         self.dga_func = jit(DGAWrapper(dga_function).get_dga_function)
         self.eval_func = jit(EvaluationFunctionWrapper(evaluation_function).get_eval_function)

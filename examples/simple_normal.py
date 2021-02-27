@@ -21,7 +21,7 @@ true_theta = [-0.5, 3.2, 1.0, 1., 1., 1.]
 
 def run_example():
     # Establish true parameters, data, and initial theta value:
-    n = 50
+    n = 25
     data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
                                         np.diag(np.asarray(true_theta[3:])), shape=[n])
     theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
@@ -32,7 +32,7 @@ def run_example():
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
     # With bounds:
-    states, log_accept = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, step_size=1e-3)
+    states, log_accept = fhmc.run_NUTS(num_iters=150, burn_in=50, initial_value=theta_0, step_size=1e-3)
     # Without bounds:
     # states, log_accept = fhmc.run_NUTS(num_iters=20000, burn_in=5000, initial_value=theta_0, step_size=2e-1)
     # states, log_accept = fhmc.run_HMC_raw(num_iters=400, burn_in=200, starting_position=theta_0, step_size=5e-2,
@@ -51,7 +51,9 @@ def run_example():
     # Save the data:
     my_path = os.path.dirname(os.path.abspath(__file__))
     np.save(my_path + "/data/SimpleNormal_States.npy", states)
-    np.save(my_path + "/data/SimpleNormal_LogProbs.npy", log_probs)
+    np.save(my_path + "/data/SimpleNormal_AcceptanceRatio.npy",
+            np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
+    np.save(my_path + "/data/SimpleNormal_ExecutionTime.npy", t1-t0)
 
 
 def graph_results():
