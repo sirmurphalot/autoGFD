@@ -10,6 +10,7 @@ from lib.DifferentiatorDGA import DifferentiatorDGA
 from lib.EvaluationFunctionWrapper import EvaluationFunctionWrapper
 from lib.LogLikelihoodWrapper import LogLikelihoodWrapper
 from jax import random, jit
+import math
 import jax.numpy as np
 import warnings
 from tensorflow_probability.substrates import jax as tfp
@@ -63,7 +64,63 @@ class FidHMC:
             log_probs: the log probability values of the fiducial density at each iteration.
         """
 
-        kernel = tfp.mcmc.NoUTurnSampler(self._fll, step_size=step_size)
+        nuts_kernel = tfp.mcmc.NoUTurnSampler(self._fll, step_size=step_size)
+        kernel = tfp.mcmc.DualAveragingStepSizeAdaptation(
+            nuts_kernel,
+            num_adaptation_steps=int(burn_in * 0.8),
+            step_size_setter_fn=lambda pkr, new_step_size: pkr._replace(step_size=new_step_size),
+            step_size_getter_fn=lambda pkr: pkr.step_size,
+            log_accept_prob_getter_fn=lambda pkr: pkr.log_accept_ratio,
+        )
+        key, sample_key = random.split(random.PRNGKey(random_key))
+        if self.lower_bounds is None or self.upper_bounds is None:
+            states, is_accepted = tfp.mcmc.sample_chain(num_iters,
+                                                        current_state=initial_value,
+                                                        kernel=kernel,
+                                                        trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
+                                                        num_burnin_steps=burn_in,
+                                                        seed=key)
+            return states, is_accepted
+        elif self.lower_bounds is not None and self.upper_bounds is not None:
+            states, is_accepted = tfp.mcmc.sample_chain(num_iters,
+                                                        current_state=initial_value,
+                                                        kernel=kernel,
+                                                        trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
+                                                        num_burnin_steps=burn_in,
+                                                        seed=key)
+            new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
+            return new_states, is_accepted
+        else:
+            raise ValueError("Please make sure your parameter bounds are properly formatted.  "
+                             "At a given index, both lower and upper bounds must be equal and must be"
+                             "either float type or None.")
+
+    def run_RWM(self, num_iters, burn_in, initial_value, random_key=13, proposal_scale=0.05):
+
+        def cauchy_new_state_fn(step_size, dtype):
+            cauchy = tfd.Cauchy(loc=dtype(0), scale=dtype(step_size))
+
+            def _fn(state_parts, seed):
+                next_state_parts = []
+                part_seeds = tfp.random.split_seed(
+                    seed, n=len(state_parts), salt='rwmcauchy')
+                for sp, ps in zip(state_parts, part_seeds):
+                    next_state_parts.append(sp + cauchy.sample(
+                        sample_shape=sp.shape, seed=ps))
+                return next_state_parts
+
+            return _fn
+
+        #
+        # kernel = tfp.mcmc.RandomWalkMetropolis(self._fll, new_state_fn=cauchy_new_state_fn(scale=proposal_scale,
+        #                                                                                    dtype=np.float32))
+
+        kernel = tfp.mcmc.DualAveragingStepSizeAdaptation(
+            tfp.mcmc.RandomWalkMetropolis(self._fll,
+                                          new_state_fn=cauchy_new_state_fn(step_size=proposal_scale, dtype=np.float32)),
+            num_adaptation_steps=math.floor(burn_in * 0.7),
+            target_accept_prob=0.4)
+
         key, sample_key = random.split(random.PRNGKey(random_key))
         if self.lower_bounds is None or self.upper_bounds is None:
             return tfp.mcmc.sample_chain(num_iters,

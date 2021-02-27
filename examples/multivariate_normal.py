@@ -117,7 +117,8 @@ def run_example(seed):
     # Create the object and perform NUTS:
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_accept = fhmc.run_NUTS(num_iters=1500, burn_in=500, initial_value=theta_0, random_key=seed)
+    states, log_accept = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0,
+                                       random_key=seed, step_size=32e-4)
     t1 = time.time()
 
     print("---------------------------------")
@@ -147,6 +148,7 @@ def create_plots():
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/MVN_States.npy")
     accept_ratio = np.load(my_path + "/data/MVN_AcceptanceRatio.npy")
+    print("True A: ", true_a)
     print(states)
     # Graph Frobenius norm of covariance matrices
     i_plus_a = np.identity(len(true_mu)) + true_a
