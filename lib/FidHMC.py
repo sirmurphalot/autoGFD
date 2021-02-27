@@ -23,13 +23,11 @@ class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
                  parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None):
-# <<<<<<< Updated upstream
-        self.ll = log_likelihood_function
 # =======
 #         ll_wrapper = LogLikelihoodWrapper(log_likelihood_function, observed_data,
 #                                           lower_bounds, upper_bounds)
 #         self.ll = jit(log_likelihood_function)
-# >>>>>>> Stashed changes
+        self.ll = jit(log_likelihood_function)
         self.dga_func = jit(DGAWrapper(dga_function).get_dga_function)
         self.eval_func = jit(EvaluationFunctionWrapper(evaluation_function).get_eval_function)
         self.param_dim = parameter_dimension
@@ -37,12 +35,7 @@ class FidHMC:
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
         self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
-# <<<<<<< Updated upstream
-# =======
-#         self.jac_l2_value = jit(self.diff_dga.calculate_fiducial_jacobian_quantity_l2)
-#         self.hamiltonian = None
-#         self.dfnll = jacrev(self._fll)
-# >>>>>>> Stashed changes
+        self.jac_l2_value = jit(self.diff_dga.calculate_fiducial_jacobian_quantity_l2)
 
     def _fll(self, theta):
         """
@@ -98,7 +91,6 @@ class FidHMC:
                              "either float type or None.")
 
 
-
 @jit
 def transform_parameters(states, lower_bounds, upper_bounds):
     """
@@ -152,4 +144,3 @@ def transform_parameters(states, lower_bounds, upper_bounds):
 @jit
 def inverse_logit(value):
     return (1. + np.exp(-value)) ** (-1.)
-
