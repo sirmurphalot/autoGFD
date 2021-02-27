@@ -8,6 +8,7 @@ import os
 from examples.fiducial_functions.multivariate_normal_fiducial_functions import *
 import jax.numpy as np
 import numpy as onp
+import time
 from lib.FidHMC import FidHMC
 from jax import random, ops
 # import math
@@ -114,16 +115,25 @@ def run_example(seed):
     np.save(my_path + "/data/MVN_trueMu.npy", true_mu)
 
     # Create the object and perform NUTS:
+    t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
     states, log_probs = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, random_key=seed)
+    t1 = time.time()
 
+    print("---------------------------------")
+    print("MCMC draw complete.")
+    print("Acceptance Ratio: ", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
+    # print("Final Step Size: ", new_step_size)
+    print("Execultion time: ", t1-t0)
+    print("---------------------------------")
     # Save the data if using simulation study:
     # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
 
     # Save the data:
     np.save(my_path + "/data/MVN_States.npy", states)
-    np.save(my_path + "/data/MVN_LogProbs.npy", log_probs)
-
+    np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept,
+                                                                                               0.))))))
+    np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1-t0, float))
 
 def create_plots():
     # Get Parameter Names
@@ -131,11 +141,12 @@ def create_plots():
     true_a = np.load(my_path + "/data/MVN_trueA.npy")
     true_lambda = np.load(my_path + "/data/MVN_trueLambda.npy")
     true_mu = np.load(my_path + "/data/MVN_trueMu.npy")
+    execution_time = np.load(my_path + "/data/MVN_ExecutionTime.npy")
 
     # Load the data
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/MVN_States.npy")
-    log_probs = np.load(my_path + "/data/MVN_LogProbs.npy")
+    accept_ratio = np.load(my_path + "/data/MVN_AcceptanceRatio.npy")
     print(states)
     # Graph Frobenius norm of covariance matrices
     i_plus_a = np.identity(len(true_mu)) + true_a
@@ -158,15 +169,16 @@ def create_plots():
     fig, ax = plt.subplots()
     ax.axvline(true_norm, color="red")
     h = sns.boxplot(x=norms, ax=ax)
-    plt.xlabel('Frobenius Norm')
+    plt.xlabel('Frobenius Norm, Acceptance Ratio: '+str(accept_ratio)+", Execution Time: "+str(execution_time))
     h.figure.savefig(my_path + "/plots/MVN_FrobeniusNorms.png")
 
     # Graph the log probability
-    plt.figure()
-    plt.plot(log_probs)
-    plt.ylabel('Target Log Prob')
-    plt.xlabel('Iterations of NUTS')
-    plt.savefig(my_path + '/plots/MVN_mcmc_log_probability.png')
+    # plt.figure()
+    # plt.plot(log_probs)
+    # plt.ylabel('Target Log Prob')
+    # plt.xlabel('Iterations of NUTS')
+    # plt.savefig(my_path + '/plots/MVN_mcmc_log_probability.png')
+
 
 # Note: if you want to use GPU on cluster, make sure you have:
 # pip install --upgrade jax jaxlib==0.1.59+cuda112 -f https://storage.googleapis.com/jax-releases/jax_releases.html
@@ -174,5 +186,5 @@ def create_plots():
 # sudo ln -s /path/to/cuda /usr/local/cuda-11.2
 # Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
-# run_example(13)#int(os.getenv('SLURM_ARRAY_TASK_ID')))
+run_example(13)  # int(os.getenv('SLURM_ARRAY_TASK_ID')))
 create_plots()
