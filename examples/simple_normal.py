@@ -53,7 +53,7 @@ def run_example():
     np.save(my_path + "/data/SimpleNormal_States.npy", states)
     np.save(my_path + "/data/SimpleNormal_AcceptanceRatio.npy",
             np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
-    np.save(my_path + "/data/SimpleNormal_ExecutionTime.npy", t1-t0)
+    np.save(my_path + "/data/SimpleNormal_ExecutionTime.npy", np.array(t1-t0, float))
 
 
 def graph_results():
@@ -65,26 +65,29 @@ def graph_results():
     # Load the data
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/SimpleNormal_States.npy")
-    log_probs = np.load(my_path + "/data/SimpleNormal_LogProbs.npy")
-
+    accept_ratio = np.load(my_path + "/data/SimpleNormal_AcceptanceRatio.npy")
+    execution_time = np.load(my_path + "/data/SimpleNormal_ExecutionTime.npy")
     # Graph the parameter draws
-    temp_sample_df = pd.DataFrame(states, columns=col_names)
+    states = states[(np.abs(stats.zscore(states)) < 3.).all(axis=1)]
+    temp_sample_df = pd.DataFrame(states)
     sample_df = temp_sample_df.melt()
-    g = sns.displot(sample_df, x="value", row="variable", kind="kde", fill=1, color = "blue",
+    g = sns.displot(sample_df, x="value", row="variable", kind="kde", fill=1, color="blue",
                     height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
     count = 0
     for ax in g.axes.flat:
         ax.axvline(true_theta[count], color="red")
         count += 1
+    g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     g.savefig(my_path+'/plots/SimpleNormal_mcmc_samples.png')
 
     # Graph the log probability
-    plt.figure()
-    plt.plot(log_probs)
-    plt.ylabel('Target Log Prob')
-    plt.xlabel('Iterations of NUTS')
-    plt.savefig(my_path+'/plots/SimpleNormal_mcmc_log_probability.png')
-
+    # plt.figure()
+    # plt.plot(log_probs)
+    # plt.ylabel('Target Log Prob')
+    # plt.xlabel('Iterations of NUTS')
+    # plt.savefig(my_path+'/plots/SimpleNormal_mcmc_log_probability.png')
+    #
+    
 
 run_example()
 graph_results()
