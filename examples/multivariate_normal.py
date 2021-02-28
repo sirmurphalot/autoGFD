@@ -110,14 +110,14 @@ def run_example(seed):
     # lower_bounds = None
     # upper_bounds = None
     my_path = os.path.dirname(os.path.abspath(__file__))
-    np.save(my_path + "/data/MVN_trueA.npy", A_0)
-    np.save(my_path + "/data/MVN_trueLambda.npy", Lambda_0)
-    np.save(my_path + "/data/MVN_trueMu.npy", true_mu)
+    # np.save(my_path + "/data/MVN_trueA.npy", A_0)
+    # np.save(my_path + "/data/MVN_trueLambda.npy", Lambda_0)
+    # np.save(my_path + "/data/MVN_trueMu.npy", true_mu)
 
     # Create the object and perform NUTS:
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_accept = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0,
+    states, log_accept = fhmc.run_NUTS(num_iters=20000, burn_in=12000, initial_value=theta_0,
                                        random_key=seed, step_size=32e-4)
     t1 = time.time()
 
@@ -128,13 +128,13 @@ def run_example(seed):
     print("Execultion time: ", t1-t0)
     print("---------------------------------")
     # Save the data if using simulation study:
-    # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
+    np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
 
     # Save the data:
-    np.save(my_path + "/data/MVN_States.npy", states)
-    np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept,
-                                                                                               0.))))))
-    np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1-t0, float))
+    # np.save(my_path + "/data/MVN_States.npy", states)
+    # np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept,
+    #                                                                                            0.))))))
+    # np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1-t0, float))
 
 def create_plots():
     # Get Parameter Names
@@ -188,5 +188,5 @@ def create_plots():
 # sudo ln -s /path/to/cuda /usr/local/cuda-11.2
 # Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
-run_example(13)  # int(os.getenv('SLURM_ARRAY_TASK_ID')))
-create_plots()
+run_example(int(os.getenv('SLURM_ARRAY_TASK_ID')))
+# create_plots()

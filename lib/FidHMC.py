@@ -63,8 +63,10 @@ class FidHMC:
             states: the parameter samples drawn from the MCMC chain.
             log_probs: the log probability values of the fiducial density at each iteration.
         """
-
+        print("---------------------------------")
+        print("Creating the NUTS Kernel...")
         nuts_kernel = tfp.mcmc.NoUTurnSampler(self._fll, step_size=step_size)
+        print("Adapting Step Size...")
         kernel = tfp.mcmc.DualAveragingStepSizeAdaptation(
             nuts_kernel,
             num_adaptation_steps=int(burn_in * 0.8),
@@ -74,14 +76,17 @@ class FidHMC:
         )
         key, sample_key = random.split(random.PRNGKey(random_key))
         if self.lower_bounds is None or self.upper_bounds is None:
+            print("Drawing from the Markov Chain...")
             states, is_accepted = tfp.mcmc.sample_chain(num_iters,
                                                         current_state=initial_value,
                                                         kernel=kernel,
                                                         trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
                                                         num_burnin_steps=burn_in,
                                                         seed=key)
+            print("---------------------------------")
             return states, is_accepted
         elif self.lower_bounds is not None and self.upper_bounds is not None:
+            print("Drawing from the Markov Chain...")
             states, is_accepted = tfp.mcmc.sample_chain(num_iters,
                                                         current_state=initial_value,
                                                         kernel=kernel,
@@ -89,16 +94,69 @@ class FidHMC:
                                                         num_burnin_steps=burn_in,
                                                         seed=key)
             new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
+            print("---------------------------------")
             return new_states, is_accepted
         else:
             raise ValueError("Please make sure your parameter bounds are properly formatted.  "
                              "At a given index, both lower and upper bounds must be equal and must be"
                              "either float type or None.")
 
-    def run_RWM(self, num_iters, burn_in, initial_value, random_key=13, proposal_scale=0.05):
+    def run_HMC(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5):
+        """
+        Method to perform a No-U-Turn sampler for a target fiducial density.  Uses the well-maintained
+        functionalities in TensorFlow and JAX.
+        Args:
+            num_iters: Total number of iterations to take the algorithm.
+            burn_in: Number of samples to burn when warming up the algorithm.
+            initial_value: A starting value for the MCMC chain.
+            random_key: Optional, sets the random seed.
+            step_size: Optional, sets the step size for the hamiltonian step.
 
-        def cauchy_new_state_fn(step_size, dtype):
-            cauchy = tfd.Cauchy(loc=dtype(0), scale=dtype(step_size))
+        Returns:
+            states: the parameter samples drawn from the MCMC chain.
+            log_probs: the log probability values of the fiducial density at each iteration.
+        """
+        print("---------------------------------")
+        print("Creating the HMC Kernel...")
+        hmc_kernel = tfp.mcmc.HamiltonianMonteCarlo(
+            target_log_prob_fn=self._fll,
+            num_leapfrog_steps=2,
+            step_size=step_size)
+        print("Adapting Step Size...")
+        kernel = tfp.mcmc.DualAveragingStepSizeAdaptation(
+            inner_kernel=hmc_kernel, num_adaptation_steps=int(burn_in * 0.8)
+        )
+        key, sample_key = random.split(random.PRNGKey(random_key))
+        if self.lower_bounds is None or self.upper_bounds is None:
+            print("Drawing from the Markov Chain...")
+            states, is_accepted = tfp.mcmc.sample_chain(num_iters,
+                                                        current_state=initial_value,
+                                                        kernel=kernel,
+                                                        trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
+                                                        num_burnin_steps=burn_in,
+                                                        seed=key)
+            print("---------------------------------")
+            return states, is_accepted
+        elif self.lower_bounds is not None and self.upper_bounds is not None:
+            print("Drawing from the Markov Chain...")
+            states, is_accepted = tfp.mcmc.sample_chain(num_iters,
+                                                        current_state=initial_value,
+                                                        kernel=kernel,
+                                                        trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
+                                                        num_burnin_steps=burn_in,
+                                                        seed=key)
+            new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
+            print("---------------------------------")
+            return new_states, is_accepted
+        else:
+            raise ValueError("Please make sure your parameter bounds are properly formatted.  "
+                             "At a given index, both lower and upper bounds must be equal and must be"
+                             "either float type or None.")
+
+    def run_RWM(self, num_iters, burn_in, initial_value, random_key=13, proposal_scale=0.3):
+
+        def cauchy_new_state_fn(scale, dtype):
+            cauchy = tfd.Cauchy(loc=dtype(0), scale=dtype(scale))
 
             def _fn(state_parts, seed):
                 next_state_parts = []
@@ -111,25 +169,26 @@ class FidHMC:
 
             return _fn
 
-        #
-        # kernel = tfp.mcmc.RandomWalkMetropolis(self._fll, new_state_fn=cauchy_new_state_fn(scale=proposal_scale,
-        #                                                                                    dtype=np.float32))
-
-        kernel = tfp.mcmc.DualAveragingStepSizeAdaptation(
-            tfp.mcmc.RandomWalkMetropolis(self._fll,
-                                          new_state_fn=cauchy_new_state_fn(step_size=proposal_scale, dtype=np.float32)),
-            num_adaptation_steps=math.floor(burn_in * 0.7),
-            target_accept_prob=0.4)
-
+        print("---------------------------------")
+        print("Creating the Metropolis-Hastings Kernel...")
+        kernel = tfp.mcmc.RandomWalkMetropolis(self._fll, new_state_fn=cauchy_new_state_fn(scale=proposal_scale,
+                                                                                           dtype=np.float32))
+        current_scale = proposal_scale
+        rate_increase = 0.01
         key, sample_key = random.split(random.PRNGKey(random_key))
+
         if self.lower_bounds is None or self.upper_bounds is None:
-            return tfp.mcmc.sample_chain(num_iters,
-                                         current_state=initial_value,
-                                         kernel=kernel,
-                                         trace_fn=lambda _, results: results.target_log_prob,
-                                         num_burnin_steps=burn_in,
-                                         seed=key)
+            print("Drawing from the Markov Chain...")
+            states, is_accepted = tfp.mcmc.sample_chain(num_iters,
+                                                        current_state=initial_value,
+                                                        kernel=kernel,
+                                                        trace_fn=lambda _, results: results.target_log_prob,
+                                                        num_burnin_steps=burn_in,
+                                                        seed=key)
+            print("---------------------------------")
+            return states, is_accepted
         elif self.lower_bounds is not None and self.upper_bounds is not None:
+            print("Drawing from the Markov Chain...")
             states, is_accepted = tfp.mcmc.sample_chain(num_iters,
                                                         current_state=initial_value,
                                                         kernel=kernel,
@@ -137,6 +196,7 @@ class FidHMC:
                                                         num_burnin_steps=burn_in,
                                                         seed=key)
             new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
+            print("---------------------------------")
             return new_states, is_accepted
         else:
             raise ValueError("Please make sure your parameter bounds are properly formatted.  "
