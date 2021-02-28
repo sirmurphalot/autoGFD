@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-
-"""
-    Class to produce the jacobian matrix of a given Data Generating Algorithm.
-
-    Author: Alexander C. Murph
-    Date: 2/14/21
-"""
 from jax import jacrev, jit
 import jax.numpy as np
 
 
 class DifferentiatorDGA:
+    """
+        Class to produce the jacobian matrix of a given Data Generating Algorithm.  Also calculates various values
+        that involve taking the gradient of the Data Generating Algorithm.
+
+        Args:
+            dga_function: user-given python callable.  The fiducial Data Generating Algorithm.
+            evaluation_function: user-given python callable.  Instructs how to evaluate the DGA.
+            parameter_dimension: integer. The number of parameters that need to be drawn.
+            observed_data: array-like.  The observed data set.
+    """
     def __init__(self, dga_function, evaluation_function, parameter_dimension, observed_data):
         self.dga_function = dga_function
         try:
@@ -22,8 +25,6 @@ class DifferentiatorDGA:
         self.data = observed_data
         # Note that data is assumed to be nxp, where n is the number of observed iid samples.
         self.num_samples = observed_data.shape[0]
-        # self.jac_matrix_partials = jacrev(self.calculate_fiducial_jacobian_matrix)
-
 
     def calculate_fiducial_jacobian_matrix(self, theta_0):
         """
@@ -45,7 +46,7 @@ class DifferentiatorDGA:
 
     def calculate_fiducial_jacobian_quantity_l2(self, theta_0):
         """
-        Method to get the jacobian determinant based on the DGA and Evaluation functions.
+        Method to get the jacobian determinant based on the DGA and Evaluation functions, using the l2 norm.
         Args:
             theta_0: A point at which we wish to calculate the fiducial jacobian determinant based on the
                 l2 norm.
@@ -60,4 +61,12 @@ class DifferentiatorDGA:
 
 @jit
 def matrix_inner_product_function(fid_jac_matrix):
+    """
+    For a matrix M, calculates sqrt(det(MtM))
+    Args:
+        fid_jac_matrix: array-like.  A matrix to be evaluated
+
+    Returns:
+        inner_product: scalar.  The inner product norm analogue for matrices.
+    """
     return np.sqrt(np.linalg.det(np.matmul(fid_jac_matrix.transpose(), fid_jac_matrix)))

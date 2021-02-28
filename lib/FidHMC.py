@@ -8,9 +8,7 @@
 from lib.DGAWrapper import DGAWrapper
 from lib.DifferentiatorDGA import DifferentiatorDGA
 from lib.EvaluationFunctionWrapper import EvaluationFunctionWrapper
-from lib.LogLikelihoodWrapper import LogLikelihoodWrapper
 from jax import random, jit
-import math
 import jax.numpy as np
 import warnings
 from tensorflow_probability.substrates import jax as tfp
@@ -61,7 +59,7 @@ class FidHMC:
 
         Returns:
             states: the parameter samples drawn from the MCMC chain.
-            log_probs: the log probability values of the fiducial density at each iteration.
+            is_accept: the log acceptance ratio.
         """
         print("---------------------------------")
         print("Creating the NUTS Kernel...")
@@ -103,7 +101,7 @@ class FidHMC:
 
     def run_HMC(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5):
         """
-        Method to perform a No-U-Turn sampler for a target fiducial density.  Uses the well-maintained
+        Method to perform a Hamiltonian Monte Carlo sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
         Args:
             num_iters: Total number of iterations to take the algorithm.
@@ -114,7 +112,7 @@ class FidHMC:
 
         Returns:
             states: the parameter samples drawn from the MCMC chain.
-            log_probs: the log probability values of the fiducial density at each iteration.
+            is_accepted: the log acceptance ratio.
         """
         print("---------------------------------")
         print("Creating the HMC Kernel...")
@@ -154,7 +152,23 @@ class FidHMC:
                              "either float type or None.")
 
     def run_RWM(self, num_iters, burn_in, initial_value, random_key=13, proposal_scale=0.3):
+        """
+        Run a random-walk Metropolis-Hastings Markov Chain Monte Carlo algorithm on the fiducial log likelihood.
+        Currently uses a Cauchy proposal distribution.  Does NOT currently have a scale-tuning mechanism.
+        I may hard-code this method to implement such a tuning mechanism.
+        Uses the well-maintained functionalities in TensorFlow and JAX.
+        Args:
+            num_iters: Number of MCMC draws requested from the kernel.
+            burn_in: Number of burn in steps to warm up the kernel.
+            initial_value: The starting parameter value.
+            random_key: A random seed, optional.
+            proposal_scale: A proposal scale, optional.  This is not yet automatically tuned, so it is highly
+                suggested that a user set and experiment with this.
 
+        Returns:
+            states: 'num_iters' draws from the MCMC chain.
+            is_accept: the log acceptance ratio.
+        """
         def cauchy_new_state_fn(scale, dtype):
             cauchy = tfd.Cauchy(loc=dtype(0), scale=dtype(scale))
 
@@ -208,12 +222,15 @@ class FidHMC:
 def transform_parameters(states, lower_bounds, upper_bounds):
     """
     After drawing values from the MCMC chain that transforms to be unconstrained, transform back to the constrained
-    parameter space.
+    parameter space.  Also calculates the jacobian of this transform.
     Args:
+        upper_bounds: array-like floats.  The user-given upper bounds on the parameter space.
+        lower_bounds: array-like floats.  The user-given lower bounds on the parameter space.
         states: the unconstrained states.
 
     Returns:
         c_states: the constrained states.
+        transform_log_jacobian: the log of the jacobian of the logit or log transform, depending on which was used.
     """
     if len(states.shape) == 1:
         states = np.array(states).reshape(1, states.shape[0])
@@ -256,4 +273,12 @@ def transform_parameters(states, lower_bounds, upper_bounds):
 
 @jit
 def inverse_logit(value):
+    """
+    Perform the inverse of the logit transform.
+    Args:
+        value: scalar or array-like parameter values.
+
+    Returns:
+        inverse logit: type same as value.  The parameters fed through the inverse logit function.
+    """
     return (1. + np.exp(-value)) ** (-1.)

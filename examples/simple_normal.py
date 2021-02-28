@@ -6,7 +6,6 @@
 """
 import os
 from examples.fiducial_functions.simple_normal_fiducial_functions import *
-import math
 import jax.numpy as np
 from lib.FidHMC import FidHMC
 from jax import random
