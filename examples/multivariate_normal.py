@@ -13,7 +13,7 @@ from lib.FidHMC import FidHMC
 from jax import random, ops
 # import math
 import seaborn as sns
-# import pandas as pd
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -54,7 +54,7 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 
 def run_example(seed):
     # Initial four draws from a MVN distribution:
-    n = 5
+    n = 25
     true_mu = np.asarray([1., 2., 3., 1.])
     true_Sigma = np.asarray([[4., 1., 0., 0.],
                              [1., 1., 0., 1.],
@@ -77,8 +77,8 @@ def run_example(seed):
             if np.all(magnitude_less_than_1):
                 u = temp_u
                 my_count = my_count + 1
-    A_0 = np.linalg.solve(np.identity(4) + u, np.identity(4) - u)
-    true_theta = collapse_parameters(A_0, Lambda_0, true_mu).astype(float)
+    true_A = np.linalg.solve(np.identity(4) + u, np.identity(4) - u)
+    true_Lambda = Lambda_0
 
     # Pick a proposal A matrix whose values are between -1 and 1.
     tempData = random.multivariate_normal(random.PRNGKey(seed), true_mu, true_Sigma, shape=[n])
@@ -110,15 +110,15 @@ def run_example(seed):
     # lower_bounds = None
     # upper_bounds = None
     my_path = os.path.dirname(os.path.abspath(__file__))
-    # np.save(my_path + "/data/MVN_trueA.npy", A_0)
-    # np.save(my_path + "/data/MVN_trueLambda.npy", Lambda_0)
-    # np.save(my_path + "/data/MVN_trueMu.npy", true_mu)
+    np.save(my_path + "/data/MVN_trueA.npy", true_A)
+    np.save(my_path + "/data/MVN_trueLambda.npy", true_Lambda)
+    np.save(my_path + "/data/MVN_trueMu.npy", true_mu)
 
     # Create the object and perform NUTS:
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_accept = fhmc.run_NUTS(num_iters=20000, burn_in=12000, initial_value=theta_0,
-                                       random_key=seed, step_size=32e-4)
+    states, log_accept = fhmc.run_NUTS(num_iters=1000, burn_in=1000, initial_value=theta_0,
+                                       random_key=seed, step_size=32e-4, num_chains=20)
     t1 = time.time()
 
     print("---------------------------------")
@@ -128,13 +128,13 @@ def run_example(seed):
     print("Execultion time: ", t1-t0)
     print("---------------------------------")
     # Save the data if using simulation study:
-    np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
+    # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
 
     # Save the data:
-    # np.save(my_path + "/data/MVN_States.npy", states)
-    # np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept,
-    #                                                                                            0.))))))
-    # np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1-t0, float))
+    np.save(my_path + "/data/MVN_States.npy", states)
+    np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept,                                                                                    0.))))))
+    np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1-t0, float))
+
 
 def create_plots():
     # Get Parameter Names
@@ -143,13 +143,32 @@ def create_plots():
     true_lambda = np.load(my_path + "/data/MVN_trueLambda.npy")
     true_mu = np.load(my_path + "/data/MVN_trueMu.npy")
     execution_time = np.load(my_path + "/data/MVN_ExecutionTime.npy")
+    true_theta = collapse_parameters(true_a, true_lambda, true_mu)
+    true_theta = true_theta
+
+    # Get Parameter Names
+    col_names = []
+    for d in range(len(true_theta)):
+        col_names.append("theta_" + str(d))
 
     # Load the data
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/MVN_States.npy")
     accept_ratio = np.load(my_path + "/data/MVN_AcceptanceRatio.npy")
     print("True A: ", true_a)
-    print(states)
+
+    # Graph parameter distributions:
+    temp_sample_df = pd.DataFrame(states)
+    sample_df = temp_sample_df.melt()
+    g = sns.displot(sample_df, x="value", row="variable", kind="kde", fill=1, color="blue",
+                    height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
+    count = 0
+    for ax in g.axes.flat:
+        ax.axvline(true_theta[count].astype(float), color="red")
+        count += 1
+    g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
+    g.savefig(my_path+'/plots/MVN_mcmc_samples.png')
+
     # Graph Frobenius norm of covariance matrices
     i_plus_a = np.identity(len(true_mu)) + true_a
     true_sigma_1_half = np.matmul(np.transpose(i_plus_a), np.linalg.solve(i_plus_a, true_lambda))
@@ -189,4 +208,4 @@ def create_plots():
 # Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
 run_example(int(os.getenv('SLURM_ARRAY_TASK_ID')))
-# create_plots()
+create_plots()
