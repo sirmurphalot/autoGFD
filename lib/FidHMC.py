@@ -30,7 +30,7 @@ class FidHMC:
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
         self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
-        self.jac_l2_value = jit(self.diff_dga.calculate_fiducial_jacobian_quantity_l2)
+        self.jac_l2_value = self.diff_dga.calculate_fiducial_jacobian_quantity_l2
 
     def _fll(self, theta):
         """

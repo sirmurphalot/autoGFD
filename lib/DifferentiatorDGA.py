@@ -17,7 +17,7 @@ class DifferentiatorDGA:
     def __init__(self, dga_function, evaluation_function, parameter_dimension, observed_data):
         self.dga_function = dga_function
         try:
-            self.jacobian_dga = jit(jacrev(dga_function))
+            self.jacobian_dga = jacrev(dga_function)
         except:
             print("DGA function not properly constructed.")
         self.evaluation_function = evaluation_function
