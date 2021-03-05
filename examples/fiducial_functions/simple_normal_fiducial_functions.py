@@ -14,17 +14,17 @@ from jax.scipy import stats
 
 def dga_func(theta, rand_quantity):
     return np.asarray([
-        theta[0] + theta[3] * rand_quantity[0],
-        theta[1] + theta[4] * rand_quantity[1],
-        theta[2] + theta[5] * rand_quantity[2]
+        theta[0] + np.sqrt(theta[3]) * rand_quantity[0],
+        theta[1] + np.sqrt(theta[4]) * rand_quantity[1],
+        theta[2] + np.sqrt(theta[5]) * rand_quantity[2]
     ])
 
 
 def eval_func(theta, data_row):
     return np.asarray([
-        (data_row[0] - theta[0]) / theta[3],
-        (data_row[1] - theta[1]) / theta[4],
-        (data_row[2] - theta[2]) / theta[5]
+        (data_row[0] - theta[0]) / np.sqrt(theta[3]),
+        (data_row[1] - theta[1]) / np.sqrt(theta[4]),
+        (data_row[2] - theta[2]) / np.sqrt(theta[5])
     ])
 
 

@@ -12,15 +12,24 @@ from jax import random
 import seaborn as sns
 import pandas as pd
 import time
+import scipy
+import numpy as onp
 import matplotlib.pyplot as plt
 
 global true_theta
+global n
+global number_of_iters
+global number_of_burnin
+global number_of_chains
 true_theta = [-0.5, 3.2, 1.0, 1.9, 1.1, 2.5]
+n = 25
+number_of_iters = 150000
+number_of_burnin = 50000
+number_of_chains = 1
 
 
 def run_example():
     # Establish true parameters, data, and initial theta value:
-    n = 25
     data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
                                         np.diag(np.asarray(true_theta[3:])), shape=[n])
     theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
@@ -31,8 +40,8 @@ def run_example():
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
     # With bounds:
-    states, log_accept = fhmc.run_NUTS(num_iters=150, burn_in=50, initial_value=theta_0, step_size=15e-2,
-                                       num_chains=2)
+    states, log_accept = fhmc.run_NUTS(num_iters=150000, burn_in=50000, initial_value=theta_0, step_size=15e-2,
+                                       num_chains=1)
     # states, log_accept = fhmc.run_RWM(num_iters=150, burn_in=50, initial_value=theta_0, proposal_scale=1e-2)
     # states, log_accept = fhmc.run_HMC(num_iters=150, burn_in=50, initial_value=theta_0, step_size=15e-2)
     t1 = time.time()
@@ -43,7 +52,7 @@ def run_example():
     print("Acceptance Ratio: ", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
     # print("Acceptance Ratio: ", np.mean(log_accept))
     # print("Final Step Size: ", new_step_size)
-    print("Execultion time: ", t1-t0)
+    print("Execultion time: ", t1 - t0)
     print("---------------------------------")
 
     # Save the data:
@@ -51,10 +60,17 @@ def run_example():
     np.save(my_path + "/data/SimpleNormal_States.npy", states)
     np.save(my_path + "/data/SimpleNormal_AcceptanceRatio.npy",
             np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
-    np.save(my_path + "/data/SimpleNormal_ExecutionTime.npy", np.array(t1-t0, float))
+    np.save(my_path + "/data/SimpleNormal_ExecutionTime.npy", np.array(t1 - t0, float))
 
 
 def graph_results():
+    # Grab the original data
+    data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
+                                        np.diag(np.asarray(true_theta[3:])), shape=[n])
+    ybar1 = np.mean(data_0[:, 0])
+    ybar2 = np.mean(data_0[:, 1])
+    ybar3 = np.mean(data_0[:, 2])
+
     # Get Parameter Names
     col_names = []
     for d in range(len(true_theta)):
@@ -65,18 +81,57 @@ def graph_results():
     states = np.load(my_path + "/data/SimpleNormal_States.npy")
     accept_ratio = np.load(my_path + "/data/SimpleNormal_AcceptanceRatio.npy")
     execution_time = np.load(my_path + "/data/SimpleNormal_ExecutionTime.npy")
+
     # Graph the parameter draws
     # states = states[(np.abs(stats.zscore(states)) < 3.).all(axis=1)]
     temp_sample_df = pd.DataFrame(states)
     sample_df = temp_sample_df.melt()
-    g = sns.displot(sample_df, x="value", row="variable", kind="kde", fill=1, color="blue",
+
+    g = sns.displot(data=sample_df, x="value", row="variable", kind="kde", fill=1, color="blue",
                     height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
+
     count = 0
     for ax in g.axes.flat:
         ax.axvline(true_theta[count], color="red")
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
-    g.savefig(my_path+'/plots/SimpleNormal_mcmc_samples.png')
+    g.savefig(my_path + '/plots/SimpleNormal_mcmc_samples.png')
+
+    # Simulate values from the true distribution and compare them to the values sampled by MCMC chain.
+    sigma_1 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar1 - true_theta[0]) ** 2.,
+                                                 size=number_of_iters)])
+    sigma_2 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar2 - true_theta[1]) ** 2.,
+                                                 size=number_of_iters)])
+    sigma_3 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar3 - true_theta[2]) ** 2.,
+                                                 size=number_of_iters)])
+    mu_1 = np.array([scipy.stats.norm.rvs(ybar1, (true_theta[3] ** 2.) * (n ** (-1.)), size=number_of_iters)])
+    mu_2 = np.array([scipy.stats.norm.rvs(ybar2, (true_theta[4] ** 2.) * (n ** (-1.)), size=number_of_iters)])
+    mu_3 = np.array([scipy.stats.norm.rvs(ybar3, (true_theta[5] ** 2.) * (n ** (-1.)), size=number_of_iters)])
+
+    true_samples = np.concatenate((mu_1, mu_2, mu_3, sigma_1, sigma_2, sigma_3)).transpose()
+    true_samples_df_temp = pd.DataFrame(true_samples)
+    true_samples_df = true_samples_df_temp.melt()
+    print(true_samples_df.describe())
+    # This is a bit dirty, but it'll do for now:
+    median = true_samples_df.loc[true_samples_df['value'] < 4, 'value'].median()
+    true_samples_df["value"] = onp.where(true_samples_df["value"] > 4, median, true_samples_df['value'])
+    print(true_samples_df.describe())
+
+    full_data = pd.concat((sample_df, true_samples_df))
+    x = onp.array(["Sampled Distribution", "True Distribution"])
+    labels = onp.repeat(x, [number_of_iters * 6, number_of_iters * 6], axis=0)
+    # labels = pd.Series(labels, dtype="category")
+    full_data['labels'] = labels
+
+    g = sns.displot(data=full_data, x="value", row="variable", hue="labels", kind="kde",
+                    height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
+
+    count = 0
+    for ax in g.axes.flat:
+        ax.axvline(true_theta[count], color="red")
+        count += 1
+    g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
+    g.savefig(my_path + '/plots/SimpleNormal_mcmc_vs_truth.png')
 
     # Graph the log probability
     # plt.figure()
@@ -85,7 +140,7 @@ def graph_results():
     # plt.xlabel('Iterations of NUTS')
     # plt.savefig(my_path+'/plots/SimpleNormal_mcmc_log_probability.png')
     #
-    
 
-run_example()
+
+# run_example()
 graph_results()

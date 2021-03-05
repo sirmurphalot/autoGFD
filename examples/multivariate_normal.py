@@ -125,15 +125,15 @@ def run_example(seed):
     print("MCMC draw complete.")
     print("Acceptance Ratio: ", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
     # print("Final Step Size: ", new_step_size)
-    print("Execultion time: ", t1-t0)
+    print("Execultion time: ", t1 - t0)
     print("---------------------------------")
     # Save the data if using simulation study:
     # np.save(my_path + "/data/simulations/MVN_States_" + os.getenv('SLURM_ARRAY_TASK_ID') + ".npy", states)
 
     # Save the data:
     np.save(my_path + "/data/MVN_States.npy", states)
-    np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept,                                                                                    0.))))))
-    np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1-t0, float))
+    np.save(my_path + "/data/MVN_AcceptanceRatio.npy", np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
+    np.save(my_path + "/data/MVN_ExecutionTime.npy", np.array(t1 - t0, float))
 
 
 def create_plots():
@@ -148,6 +148,7 @@ def create_plots():
 
     # Get Parameter Names
     col_names = []
+    print(len(true_theta))
     for d in range(len(true_theta)):
         col_names.append("theta_" + str(d))
 
@@ -155,7 +156,6 @@ def create_plots():
     my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/MVN_States.npy")
     accept_ratio = np.load(my_path + "/data/MVN_AcceptanceRatio.npy")
-    print("True A: ", true_a)
 
     # Graph parameter distributions:
     temp_sample_df = pd.DataFrame(states)
@@ -167,20 +167,27 @@ def create_plots():
         ax.axvline(true_theta[count].astype(float), color="red")
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
-    g.savefig(my_path+'/plots/MVN_mcmc_samples.png')
+    g.savefig(my_path + '/plots/MVN_mcmc_samples.png')
 
     # Graph Frobenius norm of covariance matrices
     i_plus_a = np.identity(len(true_mu)) + true_a
     true_sigma_1_half = np.matmul(np.transpose(i_plus_a), np.linalg.solve(i_plus_a, true_lambda))
     true_sigma = np.matmul(true_sigma_1_half, np.transpose(true_sigma_1_half))
     true_norm = np.array(np.linalg.norm(true_sigma, ord="fro"), float)
+
     norms = np.array([np.linalg.norm(true_sigma, ord="fro")], float)
+    sigma_collapsed_true = np.concatenate((np.concatenate((true_sigma[:, 0], true_sigma[1:, 1])),
+                                           np.concatenate((true_sigma[2:, 2], true_sigma[3:, 3]))))
+    sigmas = np.array([sigma_collapsed_true], float)
 
     for index in range(states.shape[0]):
         a, l, mu = uncollapse_parameters(states[index,])
         i_plus_a = np.identity(len(mu)) + a
         sigma_1_half = np.matmul(np.transpose(i_plus_a), np.linalg.solve(i_plus_a, l))
         sigma = np.matmul(sigma_1_half, np.transpose(sigma_1_half))
+        sigma_collapsed = np.concatenate((np.concatenate((sigma[:, 0], sigma[1:, 1])),
+                                          np.concatenate((sigma[2:, 2], sigma[3:, 3]))))
+        sigmas = np.concatenate((sigmas, np.array([sigma_collapsed])))
         norms = np.concatenate((norms, np.array([np.linalg.norm(sigma, ord="fro")], float)))
     norms = norms[1:]
     plt.figure()
@@ -190,15 +197,31 @@ def create_plots():
     fig, ax = plt.subplots()
     ax.axvline(true_norm, color="red")
     h = sns.boxplot(x=norms, ax=ax)
-    plt.xlabel('Frobenius Norm, Acceptance Ratio: '+str(accept_ratio)+", Execution Time: "+str(execution_time))
+    plt.xlabel('Frobenius Norm, Acceptance Ratio: ' + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     h.figure.savefig(my_path + "/plots/MVN_FrobeniusNorms.png")
 
-    # Graph the log probability
-    # plt.figure()
-    # plt.plot(log_probs)
-    # plt.ylabel('Target Log Prob')
-    # plt.xlabel('Iterations of NUTS')
-    # plt.savefig(my_path + '/plots/MVN_mcmc_log_probability.png')
+    # Graph the elements of the covariance matrix
+    plt.figure()
+    # Get Parameter Names
+    col_names = []
+    for d in range(len(true_theta)-4):
+        col_names.append("sigma_" + str(d))
+
+    # Load the data
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    accept_ratio = np.load(my_path + "/data/MVN_AcceptanceRatio.npy")
+
+    # Graph parameter distributions:
+    temp_sample_df = pd.DataFrame(sigmas)
+    sample_df = temp_sample_df.melt()
+    g = sns.displot(sample_df, x="value", row="variable", kind="kde", fill=1, color="blue",
+                    height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
+    count = 0
+    for ax in g.axes.flat:
+        ax.axvline(sigma_collapsed_true[count].astype(float), color="red")
+        count += 1
+    g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
+    g.savefig(my_path + '/plots/MVN_mcmc_sigmas.png')
 
 
 # Note: if you want to use GPU on cluster, make sure you have:
@@ -207,5 +230,5 @@ def create_plots():
 # sudo ln -s /path/to/cuda /usr/local/cuda-11.2
 # Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
-run_example(int(os.getenv('SLURM_ARRAY_TASK_ID')))
+# run_example(int(os.getenv('SLURM_ARRAY_TASK_ID')))
 create_plots()
