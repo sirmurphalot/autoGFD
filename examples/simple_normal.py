@@ -22,10 +22,10 @@ global number_of_iters
 global number_of_burnin
 global number_of_chains
 true_theta = [-0.5, 3.2, 1.0, 1.9, 1.1, 2.5]
-n = 25
+n = 50
 number_of_iters = 150000
 number_of_burnin = 50000
-number_of_chains = 1
+number_of_chains = 4
 
 
 def run_example():
@@ -40,8 +40,8 @@ def run_example():
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
     # With bounds:
-    states, log_accept = fhmc.run_NUTS(num_iters=150000, burn_in=50000, initial_value=theta_0, step_size=15e-2,
-                                       num_chains=1)
+    states, log_accept = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, step_size=15e-2,
+                                       num_chains=number_of_chains)
     # states, log_accept = fhmc.run_RWM(num_iters=150, burn_in=50, initial_value=theta_0, proposal_scale=1e-2)
     # states, log_accept = fhmc.run_HMC(num_iters=150, burn_in=50, initial_value=theta_0, step_size=15e-2)
     t1 = time.time()
@@ -98,30 +98,48 @@ def graph_results():
     g.savefig(my_path + '/plots/SimpleNormal_mcmc_samples.png')
 
     # Simulate values from the true distribution and compare them to the values sampled by MCMC chain.
+    num_values = int(len(sample_df.index))
+    values_range_sigma = onp.linspace(0.5, 5., num=num_values)
+    values_range_mu = onp.linspace(-2., 4.5, num=num_values)
     sigma_1 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar1 - true_theta[0]) ** 2.,
-                                                 size=number_of_iters)])
+                                                 size=number_of_chains * number_of_iters)])
     sigma_2 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar2 - true_theta[1]) ** 2.,
-                                                 size=number_of_iters)])
+                                                 size=number_of_chains * number_of_iters)])
     sigma_3 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar3 - true_theta[2]) ** 2.,
-                                                 size=number_of_iters)])
-    mu_1 = np.array([scipy.stats.norm.rvs(ybar1, (true_theta[3] ** 2.) * (n ** (-1.)), size=number_of_iters)])
-    mu_2 = np.array([scipy.stats.norm.rvs(ybar2, (true_theta[4] ** 2.) * (n ** (-1.)), size=number_of_iters)])
-    mu_3 = np.array([scipy.stats.norm.rvs(ybar3, (true_theta[5] ** 2.) * (n ** (-1.)), size=number_of_iters)])
-
-    true_samples = np.concatenate((mu_1, mu_2, mu_3, sigma_1, sigma_2, sigma_3)).transpose()
-    true_samples_df_temp = pd.DataFrame(true_samples)
-    true_samples_df = true_samples_df_temp.melt()
-    print(true_samples_df.describe())
-    # This is a bit dirty, but it'll do for now:
-    median = true_samples_df.loc[true_samples_df['value'] < 4, 'value'].median()
-    true_samples_df["value"] = onp.where(true_samples_df["value"] > 4, median, true_samples_df['value'])
-    print(true_samples_df.describe())
-
-    full_data = pd.concat((sample_df, true_samples_df))
-    x = onp.array(["Sampled Distribution", "True Distribution"])
-    labels = onp.repeat(x, [number_of_iters * 6, number_of_iters * 6], axis=0)
-    # labels = pd.Series(labels, dtype="category")
-    full_data['labels'] = labels
+                                                 size=number_of_chains * number_of_iters)])
+    mu_1 = np.array([scipy.stats.norm.rvs(ybar1, (true_theta[3] ** 2.) * (n ** (-1.)),
+                                          size=number_of_chains * number_of_iters)])
+    mu_2 = np.array([scipy.stats.norm.rvs(ybar2, (true_theta[4] ** 2.) * (n ** (-1.)),
+                                          size=number_of_chains * number_of_iters)])
+    mu_3 = np.array([scipy.stats.norm.rvs(ybar3, (true_theta[5] ** 2.) * (n ** (-1.)),
+                                          size=number_of_chains * number_of_iters)])
+    # sigma_1 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar1 - true_theta[0]) ** 2.,
+    #                                              size=number_of_chains * number_of_iters)])
+    # sigma_2 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar2 - true_theta[1]) ** 2.,
+    #                                              size=number_of_chains * number_of_iters)])
+    # sigma_3 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar3 - true_theta[2]) ** 2.,
+    #                                              size=number_of_chains * number_of_iters)])
+    # mu_1 = np.array([scipy.stats.norm.rvs(ybar1, (true_theta[3] ** 2.) * (n ** (-1.)),
+    #                                       size=number_of_chains * number_of_iters)])
+    # mu_2 = np.array([scipy.stats.norm.rvs(ybar2, (true_theta[4] ** 2.) * (n ** (-1.)),
+    #                                       size=number_of_chains * number_of_iters)])
+    # mu_3 = np.array([scipy.stats.norm.rvs(ybar3, (true_theta[5] ** 2.) * (n ** (-1.)),
+    #                                       size=number_of_chains * number_of_iters)])
+    #
+    # true_samples = np.concatenate((mu_1, mu_2, mu_3, sigma_1, sigma_2, sigma_3)).transpose()
+    # true_samples_df_temp = pd.DataFrame(true_samples)
+    # true_samples_df = true_samples_df_temp.melt()
+    # print(true_samples_df.describe())
+    # # This is a bit dirty, but it'll do for now:
+    # median = true_samples_df.loc[true_samples_df['value'] < 4, 'value'].median()
+    # true_samples_df["value"] = onp.where(true_samples_df["value"] > 4, median, true_samples_df['value'])
+    # print(true_samples_df.describe())
+    #
+    # full_data = pd.concat((sample_df, true_samples_df))
+    # x = onp.array(["Sampled Distribution", "True Distribution"])
+    # labels = onp.repeat(x, [len(sample_df.index), len(true_samples_df.index)], axis=0)
+    # # labels = pd.Series(labels, dtype="category")
+    # full_data['labels'] = labels
 
     g = sns.displot(data=full_data, x="value", row="variable", hue="labels", kind="kde",
                     height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
@@ -131,7 +149,7 @@ def graph_results():
         ax.axvline(true_theta[count], color="red")
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
-    g.savefig(my_path + '/plots/SimpleNormal_mcmc_vs_truth.png')
+    g.savefig(my_path + '/plots/SimpleNormal_mcmc_vs_truth2.png')
 
     # Graph the log probability
     # plt.figure()
