@@ -39,11 +39,12 @@ def run_example():
 
     # Create the object and perform NUTS:
     t0 = time.time()
-    fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
+    fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds, number_of_cores=40)
     # With bounds:
-    states, log_accept = fhmc.run_NUTS(num_iters=number_of_iters, burn_in=number_of_burnin, initial_value=theta_0, step_size=15e-2,
-                                       num_chains=number_of_chains)
-    # states, log_accept = fhmc.run_RWM(num_iters=150, burn_in=50, initial_value=theta_0, proposal_scale=1e-2)
+    # states, log_accept = fhmc.run_NUTS(num_iters=number_of_iters, burn_in=number_of_burnin, initial_value=theta_0, step_size=15e-2,
+    #                                   num_chains=number_of_chains)
+    states, log_accept = fhmc.run_RWM(num_iters=number_of_iters, burn_in=number_of_burnin,
+                                      initial_value=theta_0, proposal_scale=1e-2)
     # states, log_accept = fhmc.run_HMC(num_iters=150, burn_in=50, initial_value=theta_0, step_size=15e-2)
     t1 = time.time()
 

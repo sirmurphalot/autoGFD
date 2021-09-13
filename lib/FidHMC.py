@@ -21,7 +21,8 @@ warnings.filterwarnings('ignore')
 class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
-                 parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None):
+                 parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None,
+                 number_of_cores=1):
         self.ll = jit(log_likelihood_function)
         self.dga_func = jit(DGAWrapper(dga_function).get_dga_function)
         self.eval_func = jit(EvaluationFunctionWrapper(evaluation_function).get_eval_function)
@@ -31,6 +32,7 @@ class FidHMC:
         self.upper_bounds = upper_bounds
         self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
         self.jac_l2_value = self.diff_dga.calculate_fiducial_jacobian_quantity_l2
+        self.number_of_cores = number_of_cores
 
     def _fll(self, theta):
         """
@@ -91,7 +93,8 @@ class FidHMC:
                                                         kernel=kernel,
                                                         trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
                                                         num_burnin_steps=burn_in,
-                                                        seed=key)
+                                                        seed=key,
+                                                        parallel_iterations=self.number_of_cores)
             print("---------------------------------")
             states = np.concatenate(states)
             return states, is_accepted
@@ -102,7 +105,8 @@ class FidHMC:
                                                         kernel=kernel,
                                                         trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
                                                         num_burnin_steps=burn_in,
-                                                        seed=key)
+                                                        seed=key,
+                                                        parallel_iterations=self.number_of_cores)
             new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
             new_states = np.concatenate(new_states)
             print("---------------------------------")
@@ -152,7 +156,8 @@ class FidHMC:
                                                         kernel=kernel,
                                                         trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
                                                         num_burnin_steps=burn_in,
-                                                        seed=key)
+                                                        seed=key,
+                                                        parallel_iterations=self.number_of_cores)
             print("---------------------------------")
             states = np.concatenate(states)
             return states, is_accepted
@@ -163,7 +168,8 @@ class FidHMC:
                                                         kernel=kernel,
                                                         trace_fn=lambda _, pkr: pkr.inner_results.log_accept_ratio,
                                                         num_burnin_steps=burn_in,
-                                                        seed=key)
+                                                        seed=key,
+                                                        parallel_iterations=self.number_of_cores)
             new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
             print("---------------------------------")
             new_states = np.concatenate(new_states)
@@ -226,7 +232,8 @@ class FidHMC:
                                                         kernel=kernel,
                                                         trace_fn=lambda _, results: results.target_log_prob,
                                                         num_burnin_steps=burn_in,
-                                                        seed=key)
+                                                        seed=key,
+                                                        parallel_iterations=self.number_of_cores)
             print("---------------------------------")
             states = np.concatenate(states)
             return states, is_accepted
@@ -237,7 +244,8 @@ class FidHMC:
                                                         kernel=kernel,
                                                         trace_fn=lambda _, pkr: pkr.log_accept_ratio,
                                                         num_burnin_steps=burn_in,
-                                                        seed=key)
+                                                        seed=key,
+                                                        parallel_iterations=self.number_of_cores)
             new_states, log_jacobian = transform_parameters(states, self.lower_bounds, self.upper_bounds)
             print("---------------------------------")
             new_states = np.concatenate(new_states)
