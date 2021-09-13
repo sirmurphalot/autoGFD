@@ -1,6 +1,7 @@
 """
     Example of using the fiducial NUTS sampler.
     Note --> for venv mishaps, try $hash -r
+    use: python -m examples.simple_normal
     Author: Alexander Murph
     Date: 2/14/21
 """
@@ -23,8 +24,8 @@ global number_of_burnin
 global number_of_chains
 true_theta = [-0.5, 3.2, 1.0, 1.9, 1.1, 2.5]
 n = 50
-number_of_iters = 150000
-number_of_burnin = 50000
+number_of_iters = 1500
+number_of_burnin = 500
 number_of_chains = 4
 
 
@@ -40,7 +41,7 @@ def run_example():
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, 6, data_0, lower_bounds, upper_bounds)
     # With bounds:
-    states, log_accept = fhmc.run_NUTS(num_iters=15000, burn_in=5000, initial_value=theta_0, step_size=15e-2,
+    states, log_accept = fhmc.run_NUTS(num_iters=number_of_iters, burn_in=number_of_burnin, initial_value=theta_0, step_size=15e-2,
                                        num_chains=number_of_chains)
     # states, log_accept = fhmc.run_RWM(num_iters=150, burn_in=50, initial_value=theta_0, proposal_scale=1e-2)
     # states, log_accept = fhmc.run_HMC(num_iters=150, burn_in=50, initial_value=theta_0, step_size=15e-2)
@@ -160,5 +161,5 @@ def graph_results():
     #
 
 
-# run_example()
+run_example()
 graph_results()
