@@ -22,17 +22,24 @@ class FidHMC:
 
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
                  parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None,
-                 number_of_cores=1):
+                 number_of_cores=1, user_l2_jac_det_term=None):
         self.ll = jit(log_likelihood_function)
-        self.dga_func = jit(DGAWrapper(dga_function).get_dga_function)
-        self.eval_func = jit(EvaluationFunctionWrapper(evaluation_function).get_eval_function)
         self.param_dim = parameter_dimension
         self.data = observed_data
+        self.user_l2_jac_det_term = user_l2_jac_det_term
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
-        self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
-        self.jac_l2_value = self.diff_dga.calculate_fiducial_jacobian_quantity_l2
+        if dga_function is not None:
+            self.dga_func = jit(DGAWrapper(dga_function).get_dga_function)
+            self.eval_func = jit(EvaluationFunctionWrapper(evaluation_function).get_eval_function)
+            self.diff_dga = DifferentiatorDGA(self.dga_func, self.eval_func, self.param_dim, self.data)
+            self.jac_l2_value = self.diff_dga.calculate_fiducial_jacobian_quantity_l2
+        else:
+            self.jac_l2_value = self._jac_l2_wrapper
         self.number_of_cores = number_of_cores
+
+    def _jac_l2_wrapper(self, theta):
+        return self.user_l2_jac_det_term(theta, self.data)
 
     def _fll(self, theta):
         """

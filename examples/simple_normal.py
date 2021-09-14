@@ -24,8 +24,8 @@ global number_of_burnin
 global number_of_chains
 true_theta = [-0.5, 3.2, 1.0, 1.9, 1.1, 2.5]
 n = 50
-number_of_iters = 1500
-number_of_burnin = 500
+number_of_iters = 15000
+number_of_burnin = 5000
 number_of_chains = 4
 
 
@@ -73,6 +73,10 @@ def graph_results():
     ybar2 = np.mean(data_0[:, 1])
     ybar3 = np.mean(data_0[:, 2])
 
+    sd1 = np.std(data_0[:, 0], ddof=1)
+    sd2 = np.std(data_0[:, 1], ddof=1)
+    sd3 = np.std(data_0[:, 2], ddof=1)
+
     # Get Parameter Names
     col_names = []
     for d in range(len(true_theta)):
@@ -103,49 +107,35 @@ def graph_results():
     num_values = int(len(sample_df.index))
     values_range_sigma = onp.linspace(0.5, 5., num=num_values)
     values_range_mu = onp.linspace(-2., 4.5, num=num_values)
-    sigma_1 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar1 - true_theta[0]) ** 2.,
-                                                 size=number_of_chains * number_of_iters)])
-    sigma_2 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar2 - true_theta[1]) ** 2.,
-                                                 size=number_of_chains * number_of_iters)])
-    sigma_3 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar3 - true_theta[2]) ** 2.,
-                                                 size=number_of_chains * number_of_iters)])
-    mu_1 = np.array([scipy.stats.norm.rvs(ybar1, (true_theta[3] ** 2.) * (n ** (-1.)),
-                                          size=number_of_chains * number_of_iters)])
-    mu_2 = np.array([scipy.stats.norm.rvs(ybar2, (true_theta[4] ** 2.) * (n ** (-1.)),
-                                          size=number_of_chains * number_of_iters)])
-    mu_3 = np.array([scipy.stats.norm.rvs(ybar3, (true_theta[5] ** 2.) * (n ** (-1.)),
-                                          size=number_of_chains * number_of_iters)])
-    # sigma_1 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar1 - true_theta[0]) ** 2.,
-    #                                              size=number_of_chains * number_of_iters)])
-    # sigma_2 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar2 - true_theta[1]) ** 2.,
-    #                                              size=number_of_chains * number_of_iters)])
-    # sigma_3 = np.array([scipy.stats.invgamma.rvs(a=0.5, scale=0.5 * n * (ybar3 - true_theta[2]) ** 2.,
-    #                                              size=number_of_chains * number_of_iters)])
-    # mu_1 = np.array([scipy.stats.norm.rvs(ybar1, (true_theta[3] ** 2.) * (n ** (-1.)),
-    #                                       size=number_of_chains * number_of_iters)])
-    # mu_2 = np.array([scipy.stats.norm.rvs(ybar2, (true_theta[4] ** 2.) * (n ** (-1.)),
-    #                                       size=number_of_chains * number_of_iters)])
-    # mu_3 = np.array([scipy.stats.norm.rvs(ybar3, (true_theta[5] ** 2.) * (n ** (-1.)),
-    #                                       size=number_of_chains * number_of_iters)])
-    #
-    # true_samples = np.concatenate((mu_1, mu_2, mu_3, sigma_1, sigma_2, sigma_3)).transpose()
-    # true_samples_df_temp = pd.DataFrame(true_samples)
-    # true_samples_df = true_samples_df_temp.melt()
-    # print(true_samples_df.describe())
-    # # This is a bit dirty, but it'll do for now:
-    # median = true_samples_df.loc[true_samples_df['value'] < 4, 'value'].median()
-    # true_samples_df["value"] = onp.where(true_samples_df["value"] > 4, median, true_samples_df['value'])
-    # print(true_samples_df.describe())
-    #
-    # full_data = pd.concat((sample_df, true_samples_df))
-    # x = onp.array(["Sampled Distribution", "True Distribution"])
-    # labels = onp.repeat(x, [len(sample_df.index), len(true_samples_df.index)], axis=0)
-    # # labels = pd.Series(labels, dtype="category")
-    # full_data['labels'] = labels
+    mu_1 = ybar1 - sd1 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters)]) * (n ** (-0.5))
+    mu_2 = ybar2 - sd2 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters)]) * (n ** (-0.5))
+    mu_3 = ybar3 - sd3 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters)]) * (n ** (-0.5))
+
+    sigma_1 = sd1 ** 2. * np.array([scipy.stats.invgamma.rvs(a=(0.5 * (n - 1)), scale=(0.5 * (n - 1)),
+                                                             size=number_of_chains * number_of_iters)])
+    sigma_2 = sd2 ** 2. * np.array([scipy.stats.invgamma.rvs(a=(0.5 * (n - 1)), scale=(0.5 * (n - 1)),
+                                                             size=number_of_chains * number_of_iters)])
+    sigma_3 = sd3 ** 2. * np.array([scipy.stats.invgamma.rvs(a=(0.5 * (n - 1)), scale=(0.5 * (n - 1)),
+                                                             size=number_of_chains * number_of_iters)])
+
+    true_samples = np.concatenate((mu_1, mu_2, mu_3, sigma_1, sigma_2, sigma_3)).transpose()
+    true_samples_df_temp = pd.DataFrame(true_samples)
+    true_samples_df = true_samples_df_temp.melt()
+    print("The true sampled data looks like:")
+    print(true_samples_df.describe())
+    print("The FHMC samples look like:")
+    print(sample_df.describe())
+
+    full_data = pd.concat((sample_df, true_samples_df))
+    x = onp.array(["Sampled Distribution", "True Distribution"])
+    labels = onp.repeat(x, [len(sample_df.index), len(true_samples_df.index)], axis=0)
+
+    full_data['labels'] = labels
+    nrows, ncols = full_data.shape
+    full_data.index = range(nrows)
 
     g = sns.displot(data=full_data, x="value", row="variable", hue="labels", kind="kde",
                     height=2.5, aspect=3, facet_kws=dict(margin_titles=True), )
-
     count = 0
     for ax in g.axes.flat:
         ax.axvline(true_theta[count], color="red")
@@ -153,13 +143,6 @@ def graph_results():
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     g.savefig(my_path + '/plots/SimpleNormal_mcmc_vs_truth2.png')
 
-    # Graph the log probability
-    # plt.figure()
-    # plt.plot(log_probs)
-    # plt.ylabel('Target Log Prob')
-    # plt.xlabel('Iterations of NUTS')
-    # plt.savefig(my_path+'/plots/SimpleNormal_mcmc_log_probability.png')
-    #
 
 
 run_example()
