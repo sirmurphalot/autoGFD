@@ -78,6 +78,11 @@ def graph_results():
     execution_time = np.load(my_path + "/data/Gamma_ExecutionTime.npy")
     data_0 = np.load(my_path + "/data/Gamma_RawData.npy")
 
+    # Get point estimates
+    mean = np.mean(data_0)
+    var = np.var(data_0)
+    point_estimates = [mean**2/var, mean/var]
+
     # Graph the parameter draws
     # states = states[(np.abs(stats.zscore(states)) < 3.).all(axis=1)]
     temp_sample_df = pd.DataFrame(states)
@@ -89,6 +94,7 @@ def graph_results():
     count = 0
     for ax in g.axes.flat:
         ax.axvline(true_theta[count], color="red")
+        ax.axvline(point_estimates[count], color="red")
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     g.savefig(my_path + '/plots/Gamma_mcmc_samples.png')
