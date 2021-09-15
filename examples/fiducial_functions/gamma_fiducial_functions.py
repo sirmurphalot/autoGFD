@@ -13,7 +13,7 @@ from jax import scipy, grad
 
 
 def gamma_cdf_term(alpha, data_value):
-    return scipy.special.gammainc(alpha, data_value) / np.exp(scipy.special.gammaln(alpha))
+    return scipy.special.gammainc(alpha, data_value)
 
 
 def l2_jac_func(theta, data_matrix):

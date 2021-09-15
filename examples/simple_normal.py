@@ -63,12 +63,13 @@ def run_example():
     np.save(my_path + "/data/SimpleNormal_AcceptanceRatio.npy",
             np.exp(np.log(np.mean(np.exp(np.minimum(log_accept, 0.))))))
     np.save(my_path + "/data/SimpleNormal_ExecutionTime.npy", np.array(t1 - t0, float))
+    np.save(my_path + "/data/SimpleNormal_RawData.npy", data_0)
 
 
 def graph_results():
     # Grab the original data
-    data_0 = random.multivariate_normal(random.PRNGKey(13), np.asarray(true_theta[0:3]),
-                                        np.diag(np.asarray(true_theta[3:])), shape=[n])
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    data_0 = np.load(my_path + "/data/SimpleNormal_RawData.npy")
     ybar1 = np.mean(data_0[:, 0])
     ybar2 = np.mean(data_0[:, 1])
     ybar3 = np.mean(data_0[:, 2])
@@ -77,13 +78,14 @@ def graph_results():
     sd2 = np.std(data_0[:, 1], ddof=1)
     sd3 = np.std(data_0[:, 2], ddof=1)
 
+    point_estimators = [ybar1, ybar2, ybar3, sd1**2, sd2**2, sd3**2]
+
     # Get Parameter Names
     col_names = []
     for d in range(len(true_theta)):
         col_names.append("theta_" + str(d))
 
     # Load the data
-    my_path = os.path.dirname(os.path.abspath(__file__))
     states = np.load(my_path + "/data/SimpleNormal_States.npy")
     accept_ratio = np.load(my_path + "/data/SimpleNormal_AcceptanceRatio.npy")
     execution_time = np.load(my_path + "/data/SimpleNormal_ExecutionTime.npy")
@@ -99,6 +101,7 @@ def graph_results():
     count = 0
     for ax in g.axes.flat:
         ax.axvline(true_theta[count], color="red")
+        ax.axvline(point_estimators[count], color="purple")
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     g.savefig(my_path + '/plots/SimpleNormal_mcmc_samples.png')
@@ -142,7 +145,6 @@ def graph_results():
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     g.savefig(my_path + '/plots/SimpleNormal_mcmc_vs_truth2.png')
-
 
 
 run_example()

@@ -55,11 +55,10 @@ def collapse_parameters(a_matrix, lambda_matrix, mu_vector):
 def run_example(seed):
     # Initial four draws from a MVN distribution:
     n = 25
-    true_mu = np.asarray([1., 2., 3., 1.])
-    true_Sigma = np.asarray([[4., 1., 0., 0.],
-                             [1., 1., 0., 1.],
-                             [0., 0., 9., 1.],
-                             [0., 1., 1., 4.]]).astype(float)
+    true_mu = np.asarray([1., 2., 3.])
+    true_Sigma = np.asarray([[4., 1., 0.],
+                             [1., 1., 0.],
+                             [0., 0., 9.]]).astype(float)
     Lambda_0, u = np.linalg.eig(true_Sigma)
     Lambda_0 = np.diag(Lambda_0 ** 0.5)
     dim = len(true_mu)
@@ -77,7 +76,7 @@ def run_example(seed):
             if np.all(magnitude_less_than_1):
                 u = temp_u
                 my_count = my_count + 1
-    true_A = np.linalg.solve(np.identity(4) + u, np.identity(4) - u)
+    true_A = np.linalg.solve(np.identity(3) + u, np.identity(3) - u)
     true_Lambda = Lambda_0
 
     # Pick a proposal A matrix whose values are between -1 and 1.
@@ -100,13 +99,13 @@ def run_example(seed):
             if np.all(magnitude_less_than_1):
                 u = temp_u
                 my_count = my_count + 1
-    A_0 = np.linalg.solve(np.identity(4) + u, np.identity(4) - u)
+    A_0 = np.linalg.solve(np.identity(3) + u, np.identity(3) - u)
 
     # Establish true parameters, data, and initial theta value
     data_0 = random.multivariate_normal(random.PRNGKey(seed), true_mu, true_Sigma, shape=[n])
     theta_0 = collapse_parameters(A_0, Lambda_0, true_mu)
-    lower_bounds = [-1., -1., -1., -1., -1., -1., None, None, None, None, None, None, None, None]
-    upper_bounds = [1., 1., 1., 1., 1., 1., None, None, None, None, None, None, None, None]
+    lower_bounds = [-1., -1., -1., None, None, None, None, None, None]
+    upper_bounds = [1., 1., 1., None, None, None, None, None, None]
     # lower_bounds = None
     # upper_bounds = None
     my_path = os.path.dirname(os.path.abspath(__file__))
@@ -117,7 +116,7 @@ def run_example(seed):
     # Create the object and perform NUTS:
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_accept = fhmc.run_NUTS(num_iters=1000, burn_in=1000, initial_value=theta_0,
+    states, log_accept = fhmc.run_NUTS(num_iters=5000, burn_in=1000, initial_value=theta_0,
                                        random_key=seed, step_size=32e-4, num_chains=20)
     t1 = time.time()
 
@@ -230,5 +229,5 @@ def create_plots():
 # sudo ln -s /path/to/cuda /usr/local/cuda-11.2
 # Careful with the last step, Longleaf is very very wary of sudo commands.
 # int(os.getenv('SLURM_ARRAY_TASK_ID'))
-# run_example(int(os.getenv('SLURM_ARRAY_TASK_ID')))
+run_example(13)
 create_plots()
