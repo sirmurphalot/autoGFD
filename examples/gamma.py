@@ -94,7 +94,7 @@ def graph_results():
     count = 0
     for ax in g.axes.flat:
         ax.axvline(true_theta[count], color="red")
-        ax.axvline(point_estimates[count], color="red")
+        ax.axvline(point_estimates[count], color="purple")
         count += 1
     g.fig.suptitle("Acceptance Ratio: " + str(accept_ratio) + ", Execution Time: " + str(execution_time))
     g.savefig(my_path + '/plots/Gamma_mcmc_samples.png')

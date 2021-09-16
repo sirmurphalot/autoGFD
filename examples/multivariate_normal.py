@@ -16,6 +16,13 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
+global num_iterations
+global num_burnin
+global num_chains
+
+num_iterations = 5000
+num_burnin = 1000
+num_chains = 4
 
 def uncollapse_parameters(theta):
     parameter_dimension = int(0.5 * (-3 + np.sqrt(9 + 8 * len(theta))))
@@ -116,8 +123,8 @@ def run_example(seed):
     # Create the object and perform NUTS:
     t0 = time.time()
     fhmc = FidHMC(log_likelihood, dga_func, eval_func, len(theta_0), data_0, lower_bounds, upper_bounds)
-    states, log_accept = fhmc.run_NUTS(num_iters=5000, burn_in=1000, initial_value=theta_0,
-                                       random_key=seed, step_size=32e-4, num_chains=20)
+    states, log_accept = fhmc.run_NUTS(num_iters=num_iterations, burn_in=num_burnin, initial_value=theta_0,
+                                       random_key=seed, step_size=32e-4, num_chains=num_chains)
     t1 = time.time()
 
     print("---------------------------------")
