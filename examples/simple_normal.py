@@ -24,9 +24,9 @@ global number_of_burnin
 global number_of_chains
 true_theta = [-0.5, 3.2, 1.0, 1.9, 1.1, 2.5]
 n = 50
-number_of_iters = 15000
+number_of_iters = 30000
 number_of_burnin = 5000
-number_of_chains = 4
+number_of_chains = 1
 
 
 def run_example():
@@ -43,8 +43,8 @@ def run_example():
     # With bounds:
     # states, log_accept = fhmc.run_NUTS(num_iters=number_of_iters, burn_in=number_of_burnin, initial_value=theta_0, step_size=15e-2,
     #                                   num_chains=number_of_chains)
-    states, log_accept = fhmc.run_RWM(num_iters=number_of_iters, burn_in=number_of_burnin,
-                                      initial_value=theta_0, proposal_scale=1e-2)
+    states, log_accept = fhmc.run_NUTS(num_iters=number_of_iters, burn_in=number_of_burnin,
+                                      initial_value=theta_0, step_size=1e-2, num_chains=number_of_chains)
     # states, log_accept = fhmc.run_HMC(num_iters=150, burn_in=50, initial_value=theta_0, step_size=15e-2)
     t1 = time.time()
 
@@ -78,7 +78,7 @@ def graph_results():
     sd2 = np.std(data_0[:, 1], ddof=1)
     sd3 = np.std(data_0[:, 2], ddof=1)
 
-    point_estimators = [ybar1, ybar2, ybar3, sd1**2, sd2**2, sd3**2]
+    point_estimators = [ybar1, ybar2, ybar3, sd1 ** 2, sd2 ** 2, sd3 ** 2]
 
     # Get Parameter Names
     col_names = []
@@ -110,9 +110,9 @@ def graph_results():
     num_values = int(len(sample_df.index))
     values_range_sigma = onp.linspace(0.5, 5., num=num_values)
     values_range_mu = onp.linspace(-2., 4.5, num=num_values)
-    mu_1 = ybar1 - sd1 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters)]) * (n ** (-0.5))
-    mu_2 = ybar2 - sd2 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters)]) * (n ** (-0.5))
-    mu_3 = ybar3 - sd3 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters)]) * (n ** (-0.5))
+    mu_1 = ybar1 - sd1 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters )]) * (n ** (-0.5))
+    mu_2 = ybar2 - sd2 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters )]) * (n ** (-0.5))
+    mu_3 = ybar3 - sd3 * np.array([scipy.stats.t.rvs(n - 1, size=number_of_chains * number_of_iters )]) * (n ** (-0.5))
 
     sigma_1 = sd1 ** 2. * np.array([scipy.stats.invgamma.rvs(a=(0.5 * (n - 1)), scale=(0.5 * (n - 1)),
                                                              size=number_of_chains * number_of_iters)])

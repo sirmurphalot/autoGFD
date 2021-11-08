@@ -74,7 +74,7 @@ class FidHMC:
                                                              :])) for i in range(transformed_theta.shape[1])]))
         return log_sum.astype(float)
 
-    def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5, num_chains=2):
+    def run_NUTS(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5, num_chains=1):
         """
         Method to perform a No-U-Turn sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
@@ -138,7 +138,7 @@ class FidHMC:
                              "At a given index, both lower and upper bounds must be equal and must be"
                              "either float type or None.")
 
-    def run_HMC(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5, num_chains=2):
+    def run_HMC(self, num_iters, burn_in, initial_value, random_key=13, step_size=2e-5, num_chains=1):
         """
         Method to perform a Hamiltonian Monte Carlo sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
@@ -201,7 +201,7 @@ class FidHMC:
                              "At a given index, both lower and upper bounds must be equal and must be"
                              "either float type or None.")
 
-    def run_RWM(self, num_iters, burn_in, initial_value, random_key=13, proposal_scale=0.3, num_chains=2):
+    def run_RWM(self, num_iters, burn_in, initial_value, random_key=13, proposal_scale=0.3, num_chains=1):
         """
         Run a random-walk Metropolis-Hastings Markov Chain Monte Carlo algorithm on the fiducial log likelihood.
         Currently uses a Cauchy proposal distribution.  Does NOT currently have a scale-tuning mechanism.
