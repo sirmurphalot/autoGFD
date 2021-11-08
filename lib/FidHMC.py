@@ -19,10 +19,25 @@ warnings.filterwarnings('ignore')
 
 
 class FidHMC:
-
     def __init__(self, log_likelihood_function, dga_function, evaluation_function,
                  parameter_dimension, observed_data, lower_bounds=None, upper_bounds=None,
                  number_of_cores=1, user_l2_jac_det_term=None):
+        """
+        Main class to perform fiducial inference using the JAX autodifferentiator.
+        Args:
+            log_likelihood_function: User defined python function.  Describes the data distribution.
+            dga_function: User defined python function.  Describes relationship between parameters,
+                            data, and random quantity in the form Data = F(Parameters, Random Quantity).
+            evaluation_function: User defined python function.  Describes relationship between parameters,
+                            data, and random quantity in the form Random Quantity = F^-1(Data, Random Quantity).
+            parameter_dimension: Integer. The number of parameters to be learned.
+            observed_data: Vector or Matrix.  The observed data, assumed to be iid.
+            lower_bounds: Optional Vector.  Lower bounds of parameters, if they are left censored.
+            upper_bounds: Optional Vector.  Upper bounds of parameters, if they are right censored.
+            number_of_cores: Optional Integer.  Number of cores available for parallelization.
+            user_l2_jac_det_term: Optional python function.  If one is unable to express their DGA in a way that can
+                                    be used by JAX, one can also calculate the derivative directly and input it here.
+        """
         self.ll = jit(log_likelihood_function)
         self.param_dim = parameter_dimension
         self.data = observed_data
@@ -64,12 +79,12 @@ class FidHMC:
         Method to perform a No-U-Turn sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
         Args:
-            num_chains: number of independent MCMC chains to create.
-            num_iters: Total number of iterations to take the algorithm.
-            burn_in: Number of samples to burn when warming up the algorithm.
-            initial_value: A starting value for the MCMC chain.
-            random_key: Optional, sets the random seed.
-            step_size: Optional, sets the step size for the hamiltonian step.
+            num_chains: Integer. Number of independent MCMC chains to create.
+            num_iters: Integer. Total number of iterations to take the algorithm.
+            burn_in: Integer. Number of samples to burn when warming up the algorithm.
+            initial_value: Vector. A starting value for the MCMC chain, must be the same dimension as the parameter.
+            random_key: Optional Integer.  Sets the random seed.
+            step_size: Optional Double.  Sets the step size for the hamiltonian step.
 
         Returns:
             states: the parameter samples drawn from the MCMC chain.
@@ -128,12 +143,12 @@ class FidHMC:
         Method to perform a Hamiltonian Monte Carlo sampler for a target fiducial density.  Uses the well-maintained
         functionalities in TensorFlow and JAX.
         Args:
-            num_chains: Number of independent chains to run.
-            num_iters: Total number of iterations to take the algorithm.
-            burn_in: Number of samples to burn when warming up the algorithm.
-            initial_value: A starting value for the MCMC chain.
-            random_key: Optional, sets the random seed.
-            step_size: Optional, sets the step size for the hamiltonian step.
+            num_chains: Integer. Number of independent chains to run.
+            num_iters: Integer. Total number of iterations to take the algorithm.
+            burn_in: Integer. Number of samples to burn when warming up the algorithm.
+            initial_value: Vector. A starting value for the MCMC chain, must be the same dimension as the parameter.
+            random_key: Optional Integer. sets the random seed.
+            step_size: Optional Double.  Sets the step size for the hamiltonian step.
 
         Returns:
             states: the parameter samples drawn from the MCMC chain.
@@ -193,13 +208,13 @@ class FidHMC:
         I may hard-code this method to implement such a tuning mechanism.
         Uses the well-maintained functionalities in TensorFlow and JAX.
         Args:
-            num_chains: Number of independent chains to run.
-            num_iters: Number of MCMC draws requested from the kernel.
-            burn_in: Number of burn in steps to warm up the kernel.
-            initial_value: The starting parameter value.
-            random_key: A random seed, optional.
-            proposal_scale: A proposal scale, optional.  This is not yet automatically tuned, so it is highly
-                suggested that a user set and experiment with this.
+            num_chains: Integer. Number of independent chains to run.
+            num_iters: Integer. Number of MCMC draws requested from the kernel.
+            burn_in: Integer. Number of burn in steps to warm up the kernel.
+            initial_value: Vector. A starting value for the MCMC chain, must be the same dimension as the parameter.
+            random_key: Optional Integer. A random seed.
+            proposal_scale: Optional Double.  This is not yet automatically tuned, so it is highly
+                                suggested that a user set and experiment with this.
 
         Returns:
             states: 'num_iters' draws from the MCMC chain.
@@ -269,9 +284,9 @@ def transform_parameters(states, lower_bounds, upper_bounds):
     After drawing values from the MCMC chain that transforms to be unconstrained, transform back to the constrained
     parameter space.  Also calculates the jacobian of this transform.
     Args:
-        upper_bounds: array-like floats.  The user-given upper bounds on the parameter space.
-        lower_bounds: array-like floats.  The user-given lower bounds on the parameter space.
-        states: the unconstrained states.
+        upper_bounds: Array-like floats.  The user-given upper bounds on the parameter space.
+        lower_bounds: Array-like floats.  The user-given lower bounds on the parameter space.
+        states: Matrix. The unconstrained states.
 
     Returns:
         c_states: the constrained states.
