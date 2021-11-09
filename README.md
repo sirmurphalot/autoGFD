@@ -11,7 +11,7 @@ To run the examples, you must run the scripts as modules.  For instance, to run 
 ```console
 foo@bar FHMC$ python -m examples.simple_normal
 ```
-ß
+
 ## Packages Required
 
 `tensorflow_probability`, `jax`, `warnings`, `seaborn`, `pandas`, `time`, `scipy`, `numpy`, `matplotlib`, `os`
