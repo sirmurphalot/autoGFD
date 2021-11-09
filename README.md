@@ -14,7 +14,7 @@ foo@bar FHMC$ python -m examples.simple_normal
 
 ## Packages Required
 
-None.
+'tensorflow_probability', 'jax', 'warnings', 'seaborn', 'pandas', 'time', 'scipy', 'numpy', 'matplotlib', 'os'
 
 ## Citation
 
