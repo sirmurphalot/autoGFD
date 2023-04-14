@@ -1,4 +1,4 @@
-# **Fiducial Hamiltonian Monte Carlo** 
+# **Autodifferentiation for Generalized Fiducial Inference** 
 With the recent compatibility between JAX and TensorFlow Probability, we thought it possible to create a user-friendly autodifferentiator for any Generalized Fiducial application.  
 
 <ins>NEWS 11/09/2021</ins>: We have had moderate success with simple examples, but have hit snags with scaling this up to higher dimensions, such as with the MVN model, and with overly complex derivatives, such as with the Gamma model.
