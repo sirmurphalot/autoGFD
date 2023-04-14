@@ -1,5 +1,5 @@
 <div align="center">
-<img src="man/figures/autoGFD.png" alt="logo" width=90%></img>
+<img src="man/figures/autoGFD.png" alt="logo" width=75%></img>
 </div>
 <br>
 
