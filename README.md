@@ -2,6 +2,7 @@
 <img src="man/figures/autoGFD.png" alt="logo" width=75%></img>
 </div>
 <br>
+
 # **Autodifferentiation for Generalized Fiducial Inference** 
 With the recent compatibility between JAX and TensorFlow Probability, we thought it possible to create a user-friendly autodifferentiator for any Generalized Fiducial application.  
 
