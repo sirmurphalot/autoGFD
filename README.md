@@ -6,7 +6,7 @@ With the recent compatibility between JAX and TensorFlow Probability, we thought
 
 ## Examples
 
-To run the examples, you must run the scripts as modules.  For instance, to run the `simple_normal` example, use the following command line prompt in the FHMC folder.
+To run the examples, you must run the scripts as modules.  For instance, to run the `simple_normal` example, use the following command line prompt in the autoGFD folder.
 
 ```console
 foo@bar FHMC$ python -m examples.simple_normal
