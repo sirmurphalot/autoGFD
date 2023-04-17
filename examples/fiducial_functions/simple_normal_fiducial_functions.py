@@ -29,6 +29,8 @@ def eval_func(theta, data_row):
 
 
 # Note: it seems like functions from jax.scipy.stats works a little faster than user-defined functions.
+# TODO: check the data[index] in the other version of this function.
+
 def log_likelihood(theta, data):
     log_sum = np.sum(np.log(stats.multivariate_normal.pdf(data, theta[0:3], np.diag(theta[3:]))))
     return log_sum
