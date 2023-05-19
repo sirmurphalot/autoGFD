@@ -43,6 +43,11 @@ class TestDifferentiator_DGA(unittest.TestCase):
         theta_0 = np.asarray([1., 1., 1., 1., 1., 1.])
         Diff_DGA = DifferentiatorDGA(dga, eval, 3, data_0)
         fid_jac_mat = Diff_DGA.calculate_fiducial_jacobian_matrix(theta_0)
+        print("The JAX Autodiv Jacobian matrix is:")
+        print(jac_matrix(theta_0, data_0))
+        print("The Jacobian matrix should be:")
+        print(fid_jac_mat)
+
         self.assertTrue(np.allclose(fid_jac_mat, jac_matrix(theta_0, data_0)))
 
         self.assertAlmostEqual(Diff_DGA.calculate_fiducial_jacobian_quantity_l2(theta_0),
@@ -51,4 +56,5 @@ class TestDifferentiator_DGA(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    # python -m unittest tests/test_DifferentiatorDGA.py
     unittest.main()
